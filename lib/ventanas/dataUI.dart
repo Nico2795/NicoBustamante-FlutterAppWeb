@@ -657,7 +657,7 @@ class _DataUIState extends State<DataUI> {
   Widget vistaMobile() {
     return (Container(
       width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height - 50,
+      height: MediaQuery.of(context).size.height,
       decoration: BoxDecoration(color: colorScaffold),
       child: Container(
         margin: EdgeInsets.all(20),

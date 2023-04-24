@@ -95,6 +95,8 @@ class _LoginState extends State<Login> {
   var mostrarErrorPassword2 = false;
   var mensajeErrorPassword = '';
 
+  var mostrarRecuperarPassword = false;
+
   //variables slider
   var sliderLogo_x = 0.0;
 
@@ -118,7 +120,7 @@ class _LoginState extends State<Login> {
   var mostrarErrorCorreoR2 = false;
   var mensajeErrorCorreoR = '';
 
-  Future<void> signInWithEmailAndPassword() async {
+  Future<void> signInWithEmailAndPassword(String dispositivo) async {
     try {
       await Auth().signInWithEmailAndPassword(
         email: correoController.text,
@@ -129,25 +131,28 @@ class _LoginState extends State<Login> {
       print('Inicio de sesión satisfactorio en FIREBASE.');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        errorLogin('email no encontrado', 'correo');
+        errorLogin('email no encontrado', 'correo', dispositivo);
       } else if (e.code == 'wrong-password') {
-        errorLogin('password incorrecta', 'contraseña');
+        errorLogin('password incorrecta', 'contraseña', dispositivo);
       }
     } catch (e) {
       print(e);
     }
   }
 
-  void errorLogin(String error, String campo) {
+  void errorLogin(String error, String campo, String dispositivo) {
     campo == 'correo'
         ? setState(() {
             mostrarErrorCorreo = true;
 
             if (error == 'email vacio') {
-              mensajeErrorCorreo = 'El campo de correo no puede estar vacio';
+              mensajeErrorCorreo = dispositivo == 'web'
+                  ? 'El campo de correo no puede estar vacio'
+                  : 'Correo no puede estar vacio';
             } else if (error == 'email no encontrado') {
-              mensajeErrorCorreo =
-                  'El correo introducido no esta registrado en la aplicacion';
+              mensajeErrorCorreo = dispositivo == 'web'
+                  ? 'El correo introducido no existe'
+                  : 'Correo no existe';
             }
 
             Future.delayed(Duration(milliseconds: 500), () {
@@ -165,10 +170,13 @@ class _LoginState extends State<Login> {
             mostrarErrorPassword = true;
 
             if (error == 'passw vacio') {
-              mensajeErrorPassword =
-                  'El campo de contraseña no puede estar vacio';
+              mensajeErrorPassword = dispositivo == 'web'
+                  ? 'La contraseña no puede estar vacia'
+                  : 'Contraseña no puede estar vacia';
             } else if (error == 'password incorrecta') {
-              mensajeErrorPassword = 'La contraseña introducida es incorrecta';
+              mensajeErrorPassword = dispositivo == 'web'
+                  ? 'La contraseña introducida es incorrecta'
+                  : 'Contraseña incorrecta';
             }
             Future.delayed(Duration(milliseconds: 500), () {
               setState(() {
@@ -183,7 +191,7 @@ class _LoginState extends State<Login> {
           });
   }
 
-  Widget btnIniciarSesion(double fontSize) {
+  Widget btnIniciarSesion(double fontSize, String dispositivo) {
     return (Container(
       height: 50,
       width: MediaQuery.of(context).size.width,
@@ -192,13 +200,13 @@ class _LoginState extends State<Login> {
           if (correoController.text != '' &&
               correoController.text.contains('@') &&
               passwordController.text != '') {
-            signInWithEmailAndPassword();
+            signInWithEmailAndPassword(dispositivo);
           } else {
             if (correoController.text.isEmpty) {
-              errorLogin('email vacio', 'correo');
+              errorLogin('email vacio', 'correo', dispositivo);
             }
             if (passwordController.text.isEmpty) {
-              errorLogin('passw vacio', 'contraseña');
+              errorLogin('passw vacio', 'contraseña', dispositivo);
             }
           }
         },
@@ -304,7 +312,7 @@ class _LoginState extends State<Login> {
     return (Column(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        btnIniciarSesion(fontSize),
+        btnIniciarSesion(fontSize, dispositivo),
         btnIniciarSesionGoogle(fontSize, dispositivo),
         btnRegistro(fontSize, dispositivo)
       ],
@@ -651,7 +659,7 @@ class _LoginState extends State<Login> {
     ));
   }
 
-  Widget containerErrorLogin(String tipoError) {
+  Widget containerErrorLogin(String tipoError, String dispositivo) {
     return (AnimatedContainer(
       duration: Duration(milliseconds: 500),
       height: tipoError == 'correo'
@@ -705,7 +713,9 @@ class _LoginState extends State<Login> {
             height: 50,
             child: textFieldCorreo(correoController, fontSize, 'login'),
           ),
-          mostrarErrorCorreo ? containerErrorLogin('correo') : Container(),
+          mostrarErrorCorreo
+              ? containerErrorLogin('correo', dispositivo)
+              : Container(),
           SizedBox(
             height: 20,
           ),
@@ -713,8 +723,14 @@ class _LoginState extends State<Login> {
               height: 50,
               child: textFieldPassword(passwordController, fontSize, 'login')),
           mostrarErrorPassword
-              ? containerErrorLogin('contraseña')
+              ? containerErrorLogin('contraseña', dispositivo)
               : Container(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              textOlvidoContrasena(fontSize),
+            ],
+          ),
           SizedBox(
             height: 20,
           ),
@@ -752,7 +768,7 @@ class _LoginState extends State<Login> {
   }
 
   Widget vistaCargando(String interfaz) {
-    return (interfaz == 'web'
+    return (interfaz != 'web'
         ? Expanded(child: containerCargandoLogin())
         : containerCargandoLogin());
   }
@@ -992,6 +1008,28 @@ class _LoginState extends State<Login> {
     ));
   }
 
+  Widget textOlvidoContrasena(double fontSize) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          mostrarRecuperarPassword = !mostrarRecuperarPassword;
+          sliderLogo_x = _getPosition(sliderKey);
+        });
+      },
+      child: Container(
+        child: Text(
+          "¿Olvidaste tu contraseña?",
+          textAlign: TextAlign.end,
+          style: TextStyle(
+            color: colorNaranja,
+            fontSize: fontSize - 5,
+            //fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget vistaRegister(String dispositivo) {
     var fontSize = dispositivo == "web" ? 22.0 : 12.0;
     return (AnimatedOpacity(
@@ -1054,17 +1092,19 @@ class _LoginState extends State<Login> {
                     color: Colors.transparent,
                   )
                 : Container(),
-            tryLogin2 ? vistaCargando('web') : Container(),
+            tryLogin2 ? vistaCargando('login') : Container(),
             tryLogin2 || showRegister2 ? logo() : sliderLogo(),
             Container(
-              child: (tryLogin || showRegister)
+              child: (tryLogin || showRegister || mostrarRecuperarPassword)
                   ? Container()
                   : Container(
                       margin: EdgeInsets.only(left: 20, right: 20),
                       child: vistaLogin('web'),
                     ),
               color: Colors.transparent,
-              width: (tryLogin || showRegister) ? 0 : 500,
+              width: (tryLogin || showRegister || mostrarRecuperarPassword)
+                  ? 0
+                  : 500,
               //color: Colors.black,
             ),
           ],

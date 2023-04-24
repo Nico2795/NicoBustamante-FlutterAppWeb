@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:prueba/firebase_options.dart';
 import 'package:prueba/login/login.dart';
+import 'package:prueba/ventanas/eventosUI/allEvents.dart';
 
 import 'sliderImagenesHeader/index.dart';
 
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'CoffeeMondo'),
+      routes: {'/eventos': (context) => EventosUI(tipoUI: "")},
     );
   }
 }

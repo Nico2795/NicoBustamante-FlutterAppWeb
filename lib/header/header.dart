@@ -8,11 +8,17 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:prueba/autenticacion.dart';
 import 'package:prueba/login/login.dart';
 import 'package:prueba/sliderImagenesHeader/dataFrame.dart';
+import 'package:prueba/ventanas/coffeeUI/allCoffees.dart';
+import 'package:prueba/ventanas/coffeeUI/coffeeSavedUI.dart';
 import 'package:prueba/ventanas/dataUI.dart';
+import 'package:prueba/ventanas/feedbackUI/AllfeedbackUI.dart';
+import 'package:prueba/ventanas/feedbackUI/myFeedbackUI.dart';
+import 'package:prueba/ventanas/feedbackUI/savedFeedbackUI.dart';
+import 'package:prueba/ventanas/eventosUI/allEvents.dart';
 
 import 'package:prueba/ventanas/visionUI.dart';
-import 'package:prueba/ventanas/coffeeUI.dart';
-import 'package:prueba/ventanas/TransbankUI.dart';
+
+import 'package:prueba/ventanas/coffeeUI/myCoffeeUI.dart';
 
 class Header extends StatefulWidget {
   final double ancho_pantalla;
@@ -53,17 +59,65 @@ class _HeaderState extends State<Header> {
   var openData = false;
   var openData2 = false;
 
-  var openCoffee = false;
-  var openCoffee2 = false;
+  var openAllCoffees = false;
+  var openAllCoffees2 = false;
+  var coffeeUI = '';
 
-  var openTransbank = false;
-  var openTransbank2 = false;
+  var openAllEvents = false;
+  var openAllEvents2 = false;
+  var eventsUI = "";
+
+  var openAllfeedback = false;
+  var openAllfeedback2 = false;
+
+  var openMyCoffees = false;
+  var openMyCoffees2 = false;
+
+  var openMyFeedback = false;
+  var openMyFeedback2 = false;
+
+  var openMyEvents = false;
+  var openMyEvents2 = false;
+
+  var openSavedCoffees = false;
+  var openSavedCoffees2 = false;
+
+  var openSavedFeedback = false;
+  var openSavedFeedback2 = false;
+
+  var openSavedEvents = false;
+  var openSavedEvents2 = false;
+
+  var openFeedback = false;
+  var openFeedback2 = false;
+  var feedbackUI = '';
+
+  var mostrarMenuCafeteria = false;
+  var mostrarMenuCafeteria2 = false;
+  var mostrarMenuResena = false;
+  var mostrarMenuResena2 = false;
+  var mostrarMenuServicio = false;
+  var mostrarMenuServicio2 = false;
+  var mostrarMenuEvento = false;
+  var mostrarMenuEvento2 = false;
+  var mostrarMenuCuenta = false;
+  var mostrarMenuCuenta2 = false;
+
+  var mostrarVisionAI = false;
+
+  List<dynamic> activarSubMenuBtnSSB = ['', false, false];
+
+  var hoverSideBar = false;
+  var hoverSubSideBar = false;
 
   String dispositivo = '';
   Widget logoMenu() {
     return (Container(
       alignment: Alignment.center,
-      child: Image(image: AssetImage('assets/logo.png')),
+      child: Image(
+        image: AssetImage('assets/logo.png'),
+        fit: BoxFit.fill,
+      ),
     ));
   }
 
@@ -219,97 +273,6 @@ class _HeaderState extends State<Header> {
     });
   }
 
-  Widget btnMenuNavegacion(String btnText, int index, double ancho) {
-    var radiusCircularbtn = 10.0;
-    return (Container(
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          InkWell(
-              onTap: () {
-                setState(() {
-                  if (btnText == 'INGRESAR AL PORTAL') {
-                    abrirLogin();
-                  } else if (btnText == 'INICIAR SESION') {
-                    abrirLogin();
-                  } else if (btnText == 'CERRAR SESION') {
-                    signOut();
-                  }
-                });
-              },
-              splashColor: Color.fromARGB(255, 0, 0, 0),
-              onHover: (value) {
-                setState(() {
-                  hoverMenuNavBar[index] = value;
-                });
-              },
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    width: (hoverMenuNavBar[index]) ? ancho : 0,
-                    duration: Duration(milliseconds: 500),
-                    height: (dispositivo == 'PC') ? 50 : 40,
-                    decoration: BoxDecoration(
-                        color: colorMorado,
-                        borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(!hoverMenuNavBar[index]
-                                ? 0
-                                : radiusCircularbtn),
-                            bottomRight: Radius.circular(!hoverMenuNavBar[index]
-                                ? 0
-                                : radiusCircularbtn),
-                            topLeft: Radius.circular(radiusCircularbtn),
-                            bottomLeft: Radius.circular(radiusCircularbtn))),
-                  ),
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 500),
-                    width: (!hoverMenuNavBar[index]) ? ancho : 0,
-                    height: (dispositivo == 'PC') ? 50 : 40,
-                    decoration: BoxDecoration(
-                        color: colorNaranja,
-                        borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(radiusCircularbtn),
-                            bottomRight: Radius.circular(radiusCircularbtn),
-                            topLeft: Radius.circular(
-                                hoverMenuNavBar[index] ? 0 : radiusCircularbtn),
-                            bottomLeft: Radius.circular(hoverMenuNavBar[index]
-                                ? 0
-                                : radiusCircularbtn))),
-                  ),
-                ],
-              )),
-          InkWell(
-            child: Container(
-                child: Text(
-              btnText,
-              style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Impact',
-                  fontSize: (dispositivo == 'PC') ? 18 : 10,
-                  fontWeight: FontWeight.bold),
-            )),
-            onTap: () {
-              setState(() {
-                if (btnText == 'INGRESAR AL PORTAL') {
-                  abrirLogin();
-                } else if (btnText == 'INICIAR SESION') {
-                  abrirLogin();
-                } else if (btnText == 'CERRAR SESION') {
-                  signOut();
-                }
-              });
-            },
-            onHover: (value) {
-              setState(() {
-                hoverMenuNavBar[index] = value;
-              });
-            },
-          )
-        ],
-      ),
-    ));
-  }
-
   void abrirSideBar() {
     setState(() {
       sideBar = !sideBar;
@@ -323,6 +286,99 @@ class _HeaderState extends State<Header> {
       setState(() {
         sideBar3 = !sideBar3;
       });
+    });
+  }
+
+  void abrirSubMenu(String menu) {
+    setState(() {
+      if (menu == 'Cafeterias') {
+        mostrarMenuCafeteria = true;
+        cerrarSubMenu('Reseñas');
+        cerrarSubMenu('Servicios');
+        cerrarSubMenu('Eventos');
+        Future.delayed(Duration(milliseconds: 500), () {
+          mostrarMenuCafeteria2 = true;
+        });
+      } else if (menu == 'Reseñas') {
+        mostrarMenuResena = true;
+        cerrarSubMenu('Cafeterias');
+        cerrarSubMenu('Servicios');
+        cerrarSubMenu('Eventos');
+        Future.delayed(Duration(milliseconds: 500), () {
+          mostrarMenuResena2 = true;
+        });
+      } else if (menu == 'Servicios') {
+        mostrarMenuServicio = true;
+        cerrarSubMenu('Cafeterias');
+        cerrarSubMenu('Reseñas');
+        cerrarSubMenu('Eventos');
+        cerrarSubMenu('Mi cuenta');
+        Future.delayed(Duration(milliseconds: 500), () {
+          mostrarMenuServicio2 = true;
+        });
+      } else if (menu == 'Eventos') {
+        mostrarMenuEvento = true;
+        cerrarSubMenu('Cafeterias');
+        cerrarSubMenu('Reseñas');
+        cerrarSubMenu('Servicios');
+        cerrarSubMenu('Mi cuenta');
+        Future.delayed(Duration(milliseconds: 500), () {
+          mostrarMenuEvento2 = true;
+        });
+      } else if (menu == 'Mi cuenta') {
+        mostrarMenuCuenta = true;
+        cerrarSubMenu('Cafeterias');
+        cerrarSubMenu('Reseñas');
+        cerrarSubMenu('Servicios');
+        cerrarSubMenu('Eventos');
+        Future.delayed(Duration(milliseconds: 500), () {
+          mostrarMenuCuenta2 = true;
+        });
+      }
+    });
+  }
+
+  void cerrarSubMenu(String menu) {
+    setState(() {
+      if (menu == 'Cafeterias') {
+        mostrarMenuCafeteria2 = false;
+        Future.delayed(Duration(milliseconds: 100), () {
+          mostrarMenuCafeteria = false;
+        });
+      } else if (menu == 'Reseñas') {
+        mostrarMenuResena2 = false;
+        Future.delayed(Duration(milliseconds: 100), () {
+          mostrarMenuResena = false;
+        });
+      } else if (menu == 'Servicios') {
+        mostrarMenuServicio2 = false;
+        Future.delayed(Duration(milliseconds: 100), () {
+          mostrarMenuServicio = false;
+        });
+      } else if (menu == 'Eventos') {
+        mostrarMenuEvento2 = false;
+        Future.delayed(Duration(milliseconds: 100), () {
+          mostrarMenuEvento = false;
+        });
+      } else if (menu == 'Mi cuenta') {
+        mostrarMenuCuenta2 = false;
+        Future.delayed(Duration(milliseconds: 100), () {
+          mostrarMenuCuenta = false;
+        });
+      } else if (menu == 'Todos') {
+        mostrarMenuCafeteria2 = false;
+        mostrarMenuResena2 = false;
+        mostrarMenuServicio2 = false;
+        mostrarMenuEvento2 = false;
+        mostrarMenuCuenta2 = false;
+        Future.delayed(Duration(milliseconds: 100), () {
+          mostrarMenuCafeteria = false;
+          mostrarMenuResena = false;
+          mostrarMenuServicio = false;
+          mostrarMenuEvento = false;
+          mostrarMenuCuenta = false;
+        });
+      }
     });
   }
 
@@ -342,117 +398,153 @@ class _HeaderState extends State<Header> {
     });
   }
 
+  void cerrarModuloCafeteria(String modulo) {
+    setState(() {
+      if (modulo == 'Cafeterias') {
+        openAllCoffees = false;
+        openAllCoffees2 = false;
+        openMyCoffees = false;
+        openMyCoffees2 = false;
+        openSavedCoffees = false;
+        openSavedCoffees2 = false;
+      }
+    });
+  }
+
+  void cerrarModuloEventos(String modulo) {
+    setState(() {
+      if (modulo == 'Eventos') {
+        openAllEvents = false;
+        openAllEvents2 = false;
+        openMyEvents = false;
+        openMyEvents2 = false;
+        openSavedEvents = false;
+        openSavedEvents2 = false;
+      }
+    });
+  }
+
   void mostrarVision() {
     setState(() {
-      openVision = !openVision;
+      openVision = true;
+      openLogin2 = false;
+      openLogin = false;
+      cerrarModuloCafeteria('Cafeterias');
     });
     Future.delayed(Duration(milliseconds: 500), () {
-      openVision2 = !openVision2;
+      openVision2 = true;
     });
   }
 
   void cerrarVision() {
     setState(() {
-      openVision2 = !openVision2;
+      openVision2 = false;
     });
     Future.delayed(Duration(milliseconds: 500), () {
-      openVision = !openVision;
+      openVision = false;
     });
   }
 
   void mostrarData() {
+    cerrarModuloCafeteria('Cafeterias');
     setState(() {
-      openData = !openData;
+      openData = true;
     });
     Future.delayed(Duration(milliseconds: 500), () {
-      openData2 = !openData2;
+      openData2 = true;
     });
   }
 
   void cerrarData() {
     setState(() {
-      openData2 = !openData2;
+      openData2 = false;
     });
     Future.delayed(Duration(milliseconds: 500), () {
-      openData = !openData;
+      openData = false;
     });
   }
 
-  void mostrarCoffee() {
+  void mostrarLogin() {
     setState(() {
-      openCoffee = !openCoffee;
+      openLogin = true;
     });
     Future.delayed(Duration(milliseconds: 500), () {
-      openCoffee2 = !openCoffee2;
+      openLogin2 = true;
     });
   }
 
-  void cerrarCoffee() {
+  void cerrarLogin() {
     setState(() {
-      openCoffee2 = !openCoffee2;
+      openLogin2 = false;
     });
     Future.delayed(Duration(milliseconds: 500), () {
-      openCoffee = !openCoffee;
+      openLogin = false;
     });
   }
 
-  void mostrarTransbank() {
+  void disparadorBtnSideBar(String menu, bool value) {
     setState(() {
-      openTransbank = !openTransbank;
-    });
-    Future.delayed(Duration(milliseconds: 500), () {
-      openTransbank2 = !openTransbank2;
+      hoverSideBar = value;
+      value
+          ? abrirSubMenu(menu)
+          : !hoverSubSideBar
+              ? Future.delayed(
+                  Duration(milliseconds: 200),
+                  () {
+                    if (!hoverSubSideBar && !hoverSideBar) {
+                      cerrarSubMenu(menu);
+                    }
+                  },
+                )
+              : null;
     });
   }
 
-  void cerrarTransbank() {
-    setState(() {
-      openTransbank2 = !openTransbank2;
-    });
-    Future.delayed(Duration(milliseconds: 500), () {
-      openTransbank = !openTransbank;
-    });
-  }
-
-  Widget btnSideBar(String btnText, IconData icono, int index) {
+  Widget btnSideBar(String menu, IconData icono) {
     return (Container(
         width: 130,
         //color: Colors.white,
         child: InkWell(
-          onHover: (value) => print(''),
+          onHover: (value) => {
+            print(value),
+            dispositivo == 'PC' ? disparadorBtnSideBar(menu, value) : null
+          },
           onTap: () {
-            setState(() {
-              if (index == 0) {
-                mostrarVision();
-                if (openData2) {
-                  cerrarData();
-                }
-              } else if (index == 1) {
-                mostrarData();
-                if (openVision2) {
-                  cerrarVision();
-                }
-              } else if (index == 2) {
-                mostrarCoffee();
-                if (openData2) {
-                  cerrarData();
-                }
-                if (openVision2) {
-                  cerrarVision();
-                }
-              } else if (index == 3) {
-                mostrarTransbank();
-                if (openData2) {
-                  cerrarData();
-                }
-                if (openVision2) {
-                  cerrarVision();
-                }
-                if (openCoffee2) {
-                  cerrarCoffee();
-                }
-              }
-            });
+            if (menu == 'Cafeterias') {
+              dispositivo != 'PC'
+                  ? mostrarMenuCafeteria
+                      ? cerrarSubMenu(menu)
+                      : abrirSubMenu(menu)
+                  : cerrarSubMenu(menu);
+            } else if (menu == 'Reseñas') {
+              dispositivo != 'PC'
+                  ? mostrarMenuResena
+                      ? cerrarSubMenu(menu)
+                      : abrirSubMenu(menu)
+                  : cerrarSubMenu(menu);
+            } else if (menu == 'Servicios') {
+              dispositivo != 'PC'
+                  ? mostrarMenuServicio
+                      ? cerrarSubMenu(menu)
+                      : abrirSubMenu(menu)
+                  : cerrarSubMenu(menu);
+            } else if (menu == 'Eventos') {
+              dispositivo != 'PC'
+                  ? mostrarMenuEvento
+                      ? cerrarSubMenu(menu)
+                      : abrirSubMenu(menu)
+                  : cerrarSubMenu(menu);
+            } else if (menu == 'Mi cuenta') {
+              dispositivo != 'PC'
+                  ? mostrarMenuCuenta
+                      ? cerrarSubMenu(menu)
+                      : abrirSubMenu(menu)
+                  : cerrarSubMenu(menu);
+            } else if ((menu == 'Cerrar sesion')) {
+              cerrarSesion();
+            } else if (menu == 'Iniciar sesion') {
+              openLogin2 ? cerrarLogin() : abrirLogin();
+            }
           },
           child: Container(
             decoration: BoxDecoration(
@@ -465,21 +557,45 @@ class _HeaderState extends State<Header> {
                       backgroundColor:
                           MaterialStateProperty.all(Colors.transparent)),
                   onPressed: () {
-                    setState(() {
-                      if (index == 0) {
-                        mostrarVision();
-                      } else if (index == 1) {
-                        mostrarData();
-                      } else if (index == 2) {
-                        mostrarCoffee();
-                      } else if (index == 3) {
-                        mostrarTransbank();
-                      }
-                    });
+                    if (menu == 'Cafeterias') {
+                      dispositivo != 'PC'
+                          ? mostrarMenuCafeteria
+                              ? cerrarSubMenu(menu)
+                              : abrirSubMenu(menu)
+                          : cerrarSubMenu(menu);
+                    } else if (menu == 'Reseñas') {
+                      dispositivo != 'PC'
+                          ? mostrarMenuResena
+                              ? cerrarSubMenu(menu)
+                              : abrirSubMenu(menu)
+                          : cerrarSubMenu(menu);
+                    } else if (menu == 'Servicios') {
+                      dispositivo != 'PC'
+                          ? mostrarMenuServicio
+                              ? cerrarSubMenu(menu)
+                              : abrirSubMenu(menu)
+                          : cerrarSubMenu(menu);
+                    } else if (menu == 'Eventos') {
+                      dispositivo != 'PC'
+                          ? mostrarMenuEvento
+                              ? cerrarSubMenu(menu)
+                              : abrirSubMenu(menu)
+                          : cerrarSubMenu(menu);
+                    } else if (menu == 'Mi cuenta') {
+                      dispositivo != 'PC'
+                          ? mostrarMenuCuenta
+                              ? cerrarSubMenu(menu)
+                              : abrirSubMenu(menu)
+                          : cerrarSubMenu(menu);
+                    } else if ((menu == 'Cerrar sesion')) {
+                      cerrarSesion();
+                    } else if (menu == 'Iniciar sesion') {
+                      openLogin2 ? cerrarLogin() : abrirLogin();
+                    }
                   },
                   child: Icon(icono, color: colorMorado),
                 ),
-                Text(btnText,
+                Text(menu,
                     style: TextStyle(
                         color: colorMorado,
                         fontFamily: 'Impact',
@@ -498,24 +614,588 @@ class _HeaderState extends State<Header> {
         margin: EdgeInsets.only(top: 60),
         child: Column(
           children: [
-            btnSideBar('Vision AI', Icons.remove_red_eye, 0),
+            btnSideBar('Cafeterias', Icons.coffee_sharp),
             SizedBox(
               height: 30,
             ),
-            btnSideBar('Data Studio', Icons.data_thresholding, 1),
+            btnSideBar('Reseñas', Icons.feedback),
             SizedBox(
               height: 30,
             ),
-            btnSideBar('Cafeterías', Icons.coffee_maker_rounded, 2),
+            btnSideBar('Eventos', Icons.event),
             SizedBox(
               height: 30,
             ),
-            btnSideBar('Eventos', Icons.event, 3),
+            btnSideBar('Carrito', Icons.shopping_cart),
+            usuarioLogeado
+                ? SizedBox(
+                    height: 30,
+                  )
+                : Container(),
+            usuarioLogeado
+                ? btnSideBar('Servicios', Icons.graphic_eq)
+                : Container(),
             SizedBox(
               height: 30,
             ),
+            usuarioLogeado
+                ? btnSideBar('Mi cuenta', Icons.manage_accounts)
+                : btnSideBar('Iniciar sesion', Icons.login),
+            SizedBox(
+              height: 30,
+            ),
+            usuarioLogeado
+                ? btnSideBar('Cerrar sesion', Icons.logout)
+                : btnSideBar('Registrarme', Icons.account_circle),
           ],
         ));
+  }
+
+  Widget containerSideBar() {
+    return (AnimatedContainer(
+      curve: Curves.easeInOutCubic,
+      duration: Duration(milliseconds: 500),
+      width: (sideBar)
+          ? (dispositivo == 'PC')
+              ? 120
+              : 70
+          : (dispositivo == 'PC')
+              ? sideBar
+                  ? sideBar2
+                      ? 120
+                      : 0
+                  : 50
+              : 40,
+      height: (dispositivo == 'PC')
+          ? MediaQuery.of(context).size.height
+          : MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+          color: colorNaranja,
+          border: Border(
+            right: mostrarMenuCafeteria
+                ? BorderSide(color: colorMorado, width: 1.0)
+                : BorderSide.none,
+          )),
+      child: Column(
+        children: [
+          GestureDetector(
+            child: logoMenu(),
+            onTap: () {
+              setState(
+                () {
+                  if (sideBar2) {
+                    cerrarSubMenu('Todos');
+                    Future.delayed(Duration(milliseconds: 350), () {
+                      cerrarSideBar();
+                    });
+                  } else {
+                    abrirSideBar();
+                  }
+                },
+              );
+            },
+          ),
+          sideBar2 ? menuSideBar() : Container()
+        ],
+      ),
+    ));
+  }
+
+  void disparadorBtnSubSideBar(String menu, bool tieneSubMenu) {
+    if (tieneSubMenu) {
+      setState(() {
+        activarSubMenuBtnSSB[0] = menu;
+        activarSubMenuBtnSSB[1] = true;
+        Future.delayed(Duration(milliseconds: 350), () {
+          activarSubMenuBtnSSB[2] = true;
+        });
+      });
+    } else {
+      if (menu == 'Data Studio') {
+        mostrarData();
+        cerrarVision();
+      } else if (menu == 'Vision AI') {
+        print('Vision AI');
+        mostrarVision();
+        cerrarData();
+      } else if (menu == 'Crear cafeteria') {}
+    }
+  }
+
+  void abrirCoffeeUI(String menu) {
+    print(menu);
+    if (menu == 'Todas las cafeterias') {
+      setState(() {
+        openAllCoffees = true;
+        openMyCoffees2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openMyCoffees = false;
+          openAllCoffees2 = true;
+        });
+      });
+    } else if (menu == 'Mis cafeterias') {
+      setState(() {
+        openMyCoffees = true;
+        openAllCoffees2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openAllCoffees = false;
+          openMyCoffees2 = true;
+        });
+      });
+    } else if (menu == 'Cafeterias guardadas') {
+      setState(() {
+        openSavedCoffees = true;
+        openAllCoffees2 = false;
+        openMyCoffees2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openAllCoffees = false;
+          openMyCoffees = false;
+          openSavedCoffees2 = true;
+        });
+      });
+    }
+  }
+
+  void abrirEventosUI(String menu) {
+    print(menu);
+    if (menu == 'Todos las eventos') {
+      setState(() {
+        openAllEvents = true;
+        openMyEvents2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openMyEvents = false;
+          openAllEvents2 = true;
+        });
+      });
+    } else if (menu == 'Mis eventos') {
+      setState(() {
+        openMyEvents = true;
+        openAllEvents2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openAllEvents = false;
+          openMyEvents2 = true;
+        });
+      });
+    } else if (menu == 'Eventos guardados') {
+      setState(() {
+        openSavedEvents = true;
+        openAllEvents2 = false;
+        openMyEvents2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openAllEvents = false;
+          openMyEvents = false;
+          openSavedEvents2 = true;
+        });
+      });
+    }
+  }
+
+  void cerrarModuloResenas(String menu) {
+    if (menu == 'Todas las reseñas') {
+      setState(() {
+        openMyFeedback = false;
+        openMyFeedback2 = false;
+        openSavedFeedback = false;
+        openSavedFeedback2 = false;
+      });
+    } else if (menu == 'Mis reseñas') {
+      setState(() {
+        openAllfeedback = false;
+        openAllfeedback2 = false;
+        openSavedFeedback = false;
+        openSavedFeedback2 = false;
+      });
+    } else if (menu == 'Reseñas guardadas') {
+      setState(() {
+        openAllfeedback = false;
+        openAllfeedback2 = false;
+        openMyFeedback = false;
+        openMyFeedback2 = false;
+      });
+    }
+  }
+
+  void abrirFeedbackUI(String menu) {
+    if (menu == 'Todas las reseñas') {
+      if (openAllfeedback) {
+        setState(() {
+          openAllfeedback = false;
+        });
+        Future.delayed(Duration(milliseconds: 300), () {
+          setState(() {
+            openAllfeedback2 = false;
+          });
+        });
+      }
+      cerrarModuloResenas(menu);
+      cerrarModuloCafeteria('Cafeterias');
+      Future.delayed(Duration(milliseconds: 600), () {
+        setState(() {
+          feedbackUI = menu;
+          openAllfeedback = true;
+        });
+      });
+      Future.delayed(Duration(milliseconds: 900), () {
+        setState(() {
+          openAllfeedback2 = true;
+        });
+      });
+    } else if (menu == 'Mis reseñas') {
+      if (openMyFeedback) {
+        setState(() {
+          openMyFeedback = false;
+        });
+        Future.delayed(Duration(milliseconds: 300), () {
+          setState(() {
+            openMyFeedback2 = false;
+          });
+        });
+      }
+      cerrarModuloResenas(menu);
+      cerrarModuloCafeteria('Cafeterias');
+      Future.delayed(Duration(milliseconds: 600), () {
+        setState(() {
+          feedbackUI = menu;
+          openMyFeedback = true;
+        });
+      });
+      Future.delayed(Duration(milliseconds: 900), () {
+        setState(() {
+          openMyFeedback2 = true;
+        });
+      });
+    } else if (menu == 'Reseñas guardadas') {
+      if (openSavedFeedback) {
+        setState(() {
+          openSavedFeedback = false;
+        });
+        Future.delayed(Duration(milliseconds: 300), () {
+          setState(() {
+            openSavedFeedback2 = false;
+          });
+        });
+      }
+      cerrarModuloResenas(menu);
+      cerrarModuloCafeteria('Cafeterias');
+      Future.delayed(Duration(milliseconds: 600), () {
+        setState(() {
+          feedbackUI = menu;
+          openSavedFeedback = true;
+        });
+      });
+      Future.delayed(Duration(milliseconds: 900), () {
+        setState(() {
+          openSavedFeedback2 = true;
+        });
+      });
+    }
+  }
+
+  void disparadorCerrarSidebar() {
+    cerrarData();
+    cerrarLogin();
+    cerrarVision();
+    Future.delayed(Duration(milliseconds: 500), () {
+      setState(() {
+        activarSubMenuBtnSSB[2] = !activarSubMenuBtnSSB[2];
+      });
+    });
+    Future.delayed(Duration(milliseconds: 500), () {
+      setState(() {
+        activarSubMenuBtnSSB[1] = !activarSubMenuBtnSSB[1];
+      });
+    });
+    Future.delayed(Duration(milliseconds: 900), () {
+      setState(() {
+        mostrarMenuCafeteria = false;
+        mostrarMenuResena = false;
+        mostrarMenuEvento = false;
+        mostrarMenuServicio = false;
+      });
+    });
+    Future.delayed(Duration(seconds: 1), () {
+      setState(() {
+        mostrarMenuCafeteria2 = false;
+        mostrarMenuResena2 = false;
+        mostrarMenuEvento2 = false;
+        mostrarMenuServicio2 = false;
+      });
+    });
+    Future.delayed(Duration(seconds: 2), () {
+      setState(() {
+        sideBar2 = !sideBar2;
+      });
+    });
+    Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        sideBar = !sideBar;
+      });
+    });
+  }
+
+  Widget btnSubSubSideBar(String menu) {
+    return (Container(
+      width: (dispositivo == 'PC') ? 190 : 130,
+      height: (dispositivo == 'PC') ? 40 : 30,
+      child: ElevatedButton(
+        onPressed: () {
+          if (menu.contains('cafeterias') || menu.contains('Cafeterias')) {
+            disparadorCerrarSidebar();
+            abrirCoffeeUI(menu);
+          }
+          if (menu.contains('reseñas') || menu.contains('Reseñas')) {
+            disparadorCerrarSidebar();
+            abrirFeedbackUI(menu);
+          }
+          if (menu.contains('eventos') || menu.contains('Eventos')) {
+            disparadorCerrarSidebar();
+            abrirEventosUI(menu);
+          }
+        },
+        child: Text(menu,
+            style: TextStyle(
+                color: colorMorado,
+                fontFamily: 'Impact',
+                fontSize: dispositivo == 'PC' ? 16 : 10,
+                fontWeight: FontWeight.bold)),
+        style: ButtonStyle(
+            shadowColor: MaterialStateProperty.all(colorNaranja),
+            backgroundColor: MaterialStateProperty.all(colorNaranja),
+            shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20)))),
+      ),
+    ));
+  }
+
+  Widget btnSubSideBar(String btnText, bool tieneSubMenu) {
+    String ucFirst(String str) {
+      if (str == null || str.isEmpty) {
+        return "";
+      } else {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+      }
+    }
+
+    return AnimatedContainer(
+      curve: Curves.easeInOutCubic,
+      duration: Duration(milliseconds: 300),
+      decoration: activarSubMenuBtnSSB[1] && activarSubMenuBtnSSB[0] == btnText
+          ? BoxDecoration(
+              color: colorMorado,
+              borderRadius: BorderRadius.all(Radius.circular(20)))
+          : null,
+      width: (dispositivo == 'PC') ? 210 : 140,
+      height: activarSubMenuBtnSSB[1] && activarSubMenuBtnSSB[0] == btnText
+          ? dispositivo == 'PC'
+              ? 200
+              : 150
+          : dispositivo == 'PC'
+              ? 56
+              : 36,
+      child: (activarSubMenuBtnSSB[2] && activarSubMenuBtnSSB[0] == btnText)
+          ? Column(
+              children: [
+                InkWell(
+                  onTap: () {
+                    activarSubMenuBtnSSB[2] = false;
+                    Future.delayed(Duration(milliseconds: 250), () {
+                      activarSubMenuBtnSSB[1] = false;
+                    });
+                  },
+                  child: Container(
+                    width: (dispositivo == 'PC') ? 190 : 100,
+                    height: (dispositivo == 'PC') ? 56 : 36,
+                    decoration: BoxDecoration(
+                        color: colorMorado,
+                        borderRadius: BorderRadius.all(Radius.circular(20))),
+                    child: Container(
+                      margin: EdgeInsets.symmetric(horizontal: 5),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Text(btnText,
+                              style: TextStyle(
+                                  color: colorNaranja,
+                                  fontFamily: 'Impact',
+                                  fontSize: dispositivo == 'PC' ? 18 : 10,
+                                  fontWeight: FontWeight.bold)),
+                          Icon(
+                            Icons.arrow_drop_up,
+                            color: colorNaranja,
+                            size: dispositivo == 'PC' ? 26 : 20,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      btnSubSubSideBar(
+                          'Mis ${btnText.split(' ')[1].toLowerCase()}'),
+                      btnSubSubSideBar(
+                          '${ucFirst(btnText.split(' ')[1])} ${btnText.split(' ')[1] == 'eventos' ? 'guardados' : 'guardadas'}'),
+                      btnSubSubSideBar(
+                          '${btnText.split(' ')[1] == 'eventos' ? 'Todos' : 'Todas'} las ${btnText.split(' ')[1].toLowerCase()}'),
+                    ],
+                  ),
+                )
+              ],
+            )
+          : ElevatedButton(
+              onPressed: () {
+                disparadorBtnSubSideBar(btnText, tieneSubMenu);
+              },
+              child: tieneSubMenu
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(btnText,
+                            style: TextStyle(
+                                color: colorNaranja,
+                                fontFamily: 'Impact',
+                                fontSize: dispositivo == 'PC' ? 18 : 10,
+                                fontWeight: FontWeight.bold)),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          color: colorNaranja,
+                          size: dispositivo == 'PC' ? 26 : 20,
+                        )
+                      ],
+                    )
+                  : Text(btnText,
+                      style: TextStyle(
+                          color: colorNaranja,
+                          fontFamily: 'Impact',
+                          fontSize: dispositivo == 'PC' ? 18 : 10,
+                          fontWeight: FontWeight.bold)),
+              style: ButtonStyle(
+                  shadowColor: MaterialStateProperty.all(colorMorado),
+                  backgroundColor: MaterialStateProperty.all(colorMorado),
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)))),
+            ),
+    );
+  }
+
+  Widget menuSubSideBar(String menu) {
+    double altoEspaciador = dispositivo == 'PC' ? 30 : 10;
+    return Container(
+        margin: EdgeInsets.symmetric(vertical: 50),
+        child: menu == 'Cafeterias'
+            ? Column(
+                children: [
+                  btnSubSideBar('Ver cafeterias', true),
+                  SizedBox(
+                    height: altoEspaciador,
+                  ),
+                  btnSubSideBar('Crear cafeteria', false)
+                ],
+              )
+            : menu == 'Reseñas'
+                ? Column(
+                    children: [
+                      btnSubSideBar('Ver reseñas', true),
+                      SizedBox(
+                        height: altoEspaciador,
+                      ),
+                      btnSubSideBar('Crear reseña', false)
+                    ],
+                  )
+                : menu == 'Servicios'
+                    ? Column(
+                        children: [
+                          btnSubSideBar('Vision AI', false),
+                          SizedBox(
+                            height: altoEspaciador,
+                          ),
+                          btnSubSideBar('Data Studio', false)
+                        ],
+                      )
+                    : menu == 'Eventos'
+                        ? Column(
+                            children: [
+                              btnSubSideBar('Ver eventos', true),
+                              SizedBox(
+                                height: altoEspaciador,
+                              ),
+                              btnSubSideBar('Crear evento', false)
+                            ],
+                          )
+                        : menu == 'Mi cuenta'
+                            ? Column(
+                                children: [
+                                  btnSubSideBar('Mi perfil', true),
+                                  SizedBox(
+                                    height: altoEspaciador,
+                                  ),
+                                  btnSubSideBar('Mis entradas', false),
+                                  SizedBox(
+                                    height: altoEspaciador,
+                                  ),
+                                  btnSubSideBar('Mis ajustes', false)
+                                ],
+                              )
+                            : Container());
+  }
+
+  Widget containerSubSideBar() {
+    return (AnimatedContainer(
+      curve: Curves.decelerate,
+      duration: Duration(milliseconds: 300),
+      width: (mostrarMenuCafeteria ||
+              mostrarMenuResena ||
+              mostrarMenuServicio ||
+              mostrarMenuEvento ||
+              mostrarMenuCuenta)
+          ? (dispositivo == 'PC')
+              ? 220
+              : 150
+          : 0,
+      height: (dispositivo == 'PC')
+          ? MediaQuery.of(context).size.height
+          : MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            spreadRadius: 5,
+            blurRadius: 7,
+            offset: Offset(3, 3), // changes position of shadow
+          ),
+        ],
+        color: colorNaranja,
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(10),
+          bottomRight: Radius.circular(10),
+        ),
+      ),
+      child: mostrarMenuCafeteria2
+          ? menuSubSideBar('Cafeterias')
+          : mostrarMenuResena2
+              ? menuSubSideBar('Reseñas')
+              : mostrarMenuServicio2
+                  ? menuSubSideBar('Servicios')
+                  : mostrarMenuEvento2
+                      ? menuSubSideBar('Eventos')
+                      : mostrarMenuCuenta2
+                          ? menuSubSideBar('Mi cuenta')
+                          : Container(),
+    ));
   }
 
   @override
@@ -540,205 +1220,140 @@ class _HeaderState extends State<Header> {
       }
     });
 
-    print("Hover Side Bar $hoverMenuSideBar");
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return (Stack(
       children: [
-        Container(
-          height: (dispositivo == 'PC') ? 60 : 50,
-          child: (ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-              child: Container(
-                color: colorMorado.withOpacity(0.6),
-                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                  ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all(colorNaranja),
-                          shape:
-                              MaterialStateProperty.all(RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(10),
-                          )))),
-                      onPressed: () {
-                        if (sideBar2) {
-                          cerrarSideBar();
-                        } else {
-                          abrirSideBar();
-                        }
-                      },
-                      child: AnimatedContainer(
-                        curve: Curves.easeInOutCubic,
-                        duration: Duration(milliseconds: 500),
-                        width: (sideBar)
-                            ? (dispositivo == 'PC')
-                                ? 100
-                                : 38
-                            : (dispositivo == 'PC')
-                                ? sideBar
-                                    ? sideBar2
-                                        ? 100
-                                        : 0
-                                    : 30
-                                : 30,
-                        height: (dispositivo == 'PC') ? 60 : 50,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                                topRight:
-                                    Radius.circular(!hoverMenuSideBar ? 0 : 10),
-                                bottomRight:
-                                    Radius.circular(!hoverMenuSideBar ? 0 : 10),
-                                topLeft: Radius.circular(10),
-                                bottomLeft: Radius.circular(10))),
-                        child: logoMenu(),
-                      )),
-                  SizedBox(
-                      width: (dispositivo == 'PC')
-                          ? MediaQuery.of(context).size.width * 0.2
-                          : MediaQuery.of(context).size.width * 0.05),
-                  Expanded(
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: (dispositivo == 'PC')
-                            ? [
-                                btnMenuNavegacion('COFFEEMONDO', 0, 230),
-                                btnMenuNavegacion(
-                                    usuarioLogeado
-                                        ? 'CERRAR SESION'
-                                        : 'INICIAR SESION',
-                                    1,
-                                    160),
-                                usuarioLogeado
-                                    ? Container()
-                                    : btnMenuNavegacion('REGISTRARME', 2, 160),
-                                SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.0000001),
-                              ]
-                            : [
-                                btnMenuNavegacion('COFFEEMONDO', 0, 140),
-                                btnMenuNavegacion(
-                                    usuarioLogeado
-                                        ? 'CERRAR SESION'
-                                        : 'INGRESAR AL PORTAL',
-                                    1,
-                                    140),
-                                SizedBox(width: 3)
-                              ]),
-                  )
-                ]),
-              ),
-            ),
-          )),
-        ),
-        (openLogin && !sideBar)
+        openMyCoffees
             ? AnimatedOpacity(
-                opacity: openLogin2 ? 1 : 0,
+                opacity: openMyCoffees2 ? 1 : 0,
                 duration: Duration(milliseconds: 500),
-                child: Login())
-            : Stack(
-                children: [
-                  openLogin
-                      ? AnimatedOpacity(
-                          opacity: openLogin2 ? 1 : 0,
-                          duration: Duration(milliseconds: 500),
-                          child: Login())
-                      : Container(),
-                  openVision
-                      ? AnimatedOpacity(
-                          opacity: openVision2 ? 1 : 0,
-                          duration: Duration(milliseconds: 500),
-                          child: VisionUI(),
-                        )
-                      : Container(),
-                  openData
-                      ? AnimatedOpacity(
-                          opacity: openData2 ? 1 : 0,
-                          duration: Duration(milliseconds: 500),
-                          child: DataUI(),
-                        )
-                      : Container(),
-                  openCoffee
-                      ? AnimatedOpacity(
-                          opacity: openCoffee2 ? 1 : 0,
-                          duration: Duration(milliseconds: 500),
-                          child: CafeteriasUI(),
-                        )
-                      : Container(),
-                  openTransbank
-                      ? AnimatedOpacity(
-                          opacity: openTransbank2 ? 1 : 0,
-                          duration: Duration(milliseconds: 500),
-                          child: PruebaTransbankUI(),
-                        )
-                      : Container(),
-                  AnimatedContainer(
-                      alignment: Alignment.topLeft,
-                      duration: Duration(milliseconds: 500),
-                      curve: Curves.easeInOutCubic,
-                      decoration: BoxDecoration(
-                        color: colorNaranja,
-                        borderRadius: BorderRadius.only(
-                            //topRight: Radius.circular(10),
-                            bottomRight: Radius.circular(10)),
-                      ),
-                      width: (sideBar2)
-                          ? (dispositivo == 'PC')
-                              ? 132
-                              : 70
-                          : 0,
-                      height: (dispositivo == 'PC')
-                          ? (sideBar)
-                              ? MediaQuery.of(context).size.height - 60
-                              : 0
-                          : (sideBar)
-                              ? MediaQuery.of(context).size.height - 50
-                              : 0,
-                      child: (sideBar3)
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                  menuSideBar(),
-                                  Container(
-                                    margin: EdgeInsets.only(bottom: 20),
-                                    child: OutlinedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          horario = !horario;
-                                        });
-                                      },
-                                      child: Container(
-                                        //color: Colors.black,
-                                        margin: EdgeInsets.all(10),
-                                        child: Icon(
-                                            (!horario)
-                                                ? Icons.nightlight_outlined
-                                                : Icons.wb_sunny_outlined,
-                                            color: colorMorado,
-                                            size:
-                                                dispositivo == 'PC' ? 30 : 20),
-                                      ),
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all(
-                                                  Colors.transparent),
-                                          shape: MaterialStateProperty.all(
-                                              CircleBorder(
-                                            side: BorderSide(
-                                                color: colorMorado, width: 3),
-                                          ))),
+                child: myCoffeesUI(
+                  tipoUI: coffeeUI,
+                ),
+              )
+            : openAllCoffees
+                ? AnimatedOpacity(
+                    opacity: openAllCoffees2 ? 1 : 0,
+                    duration: Duration(milliseconds: 500),
+                    child: allCoffeesUI(
+                      tipoUI: coffeeUI,
+                    ),
+                  )
+                : openSavedCoffees
+                    ? AnimatedOpacity(
+                        opacity: openSavedCoffees2 ? 1 : 0,
+                        duration: Duration(milliseconds: 500),
+                        child: coffeeSavedUI(
+                          tipoUI: coffeeUI,
+                        ),
+                      )
+                    : openMyFeedback
+                        ? AnimatedOpacity(
+                            opacity: openMyFeedback2 ? 1 : 0,
+                            duration: Duration(milliseconds: 500),
+                            child: myResenasUI(
+                              tipoUI: feedbackUI,
+                            ),
+                          )
+                        : openSavedFeedback
+                            ? AnimatedOpacity(
+                                opacity: openSavedFeedback2 ? 1 : 0,
+                                duration: Duration(milliseconds: 500),
+                                child: savedResenasUI(
+                                  tipoUI: feedbackUI,
+                                ),
+                              )
+                            : openAllfeedback
+                                ? AnimatedOpacity(
+                                    opacity: openAllfeedback2 ? 1 : 0,
+                                    duration: Duration(milliseconds: 500),
+                                    child: AllResenasUI(
+                                      tipoUI: feedbackUI,
                                     ),
-                                  ),
-                                ])
-                          : Container()),
-                ],
-              ),
-        AnimatedOpacity(
-            opacity: (openDataVision) ? 1 : 0,
-            duration: Duration(milliseconds: 500),
-            child: openDataVision ? DataVision() : Container())
+                                  )
+                                : openLogin
+                                    ? AnimatedOpacity(
+                                        opacity: openLogin2 ? 1 : 0,
+                                        duration: Duration(milliseconds: 500),
+                                        child: Login(),
+                                      )
+                                    : openVision
+                                        ? AnimatedOpacity(
+                                            opacity: openVision2 ? 1 : 0,
+                                            duration:
+                                                Duration(milliseconds: 500),
+                                            child: VisionUI(),
+                                          )
+                                        : openData
+                                            ? AnimatedOpacity(
+                                                opacity: openData2 ? 1 : 0,
+                                                duration:
+                                                    Duration(milliseconds: 500),
+                                                child: DataUI(),
+                                              )
+                                            : openAllEvents
+                                                ? AnimatedOpacity(
+                                                    opacity:
+                                                        openAllEvents2 ? 1 : 0,
+                                                    duration: Duration(
+                                                        milliseconds: 500),
+                                                    child: EventosUI(
+                                                      tipoUI: eventsUI,
+                                                    ),
+                                                  )
+                                                : Row(
+                                                    children: [
+                                                      containerSideBar(),
+                                                      InkWell(
+                                                        mouseCursor:
+                                                            MouseCursor.defer,
+                                                        onTap: () {},
+                                                        child:
+                                                            containerSubSideBar(),
+                                                        onHover: (value) {
+                                                          print(value);
+                                                          setState(() {
+                                                            hoverSubSideBar =
+                                                                value;
+                                                          });
+                                                          if (!hoverSubSideBar &&
+                                                              dispositivo ==
+                                                                  'PC') {
+                                                            setState(() {
+                                                              mostrarMenuCafeteria2 =
+                                                                  false;
+                                                              mostrarMenuResena2 =
+                                                                  false;
+                                                              mostrarMenuServicio2 =
+                                                                  false;
+                                                              mostrarMenuEvento2 =
+                                                                  false;
+                                                              mostrarMenuCuenta2 =
+                                                                  false;
+                                                            });
+                                                            Future.delayed(
+                                                                Duration(
+                                                                    milliseconds:
+                                                                        300),
+                                                                () {
+                                                              setState(() {
+                                                                mostrarMenuCafeteria =
+                                                                    false;
+                                                                mostrarMenuResena =
+                                                                    false;
+                                                                mostrarMenuServicio =
+                                                                    false;
+                                                                mostrarMenuEvento =
+                                                                    false;
+                                                                mostrarMenuCuenta =
+                                                                    false;
+                                                              });
+                                                            });
+                                                          }
+                                                        },
+                                                      )
+                                                    ],
+                                                  ),
       ],
-    );
+    ));
   }
 }

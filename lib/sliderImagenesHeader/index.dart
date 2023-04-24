@@ -18,12 +18,13 @@ class index extends StatefulWidget {
 
 class _indexState extends State<index> {
   final PageController _pageController = PageController(initialPage: 0);
+
   int _currentPage = 0;
   bool usuarioLogeado = false;
 
   @override
   Widget build(BuildContext context) {
-    final ancho_pantalla = MediaQuery.of(context).size.width;
+    var dispositivo = '';
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user != null) {
         setState(() {
@@ -33,6 +34,15 @@ class _indexState extends State<index> {
         setState(() {
           usuarioLogeado = false;
         });
+      }
+    });
+    final ancho_pantalla = MediaQuery.of(context).size.width;
+
+    setState(() {
+      if (ancho_pantalla > 1130) {
+        dispositivo = 'PC';
+      } else {
+        dispositivo = 'MOVIL';
       }
     });
     return Stack(
@@ -51,45 +61,50 @@ class _indexState extends State<index> {
 
         //(ancho_pantalla > 1180) ? Login() : Container(),
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 50),
+          margin: EdgeInsets.symmetric(horizontal: 150),
           alignment: Alignment.center,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                icon: Icon(
-                  Icons.arrow_back_ios,
-                  color: Colors.white70,
-                ),
-                onPressed: () {
-                  _pageController.previousPage(
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                  if (_currentPage == 0) {
-                    _pageController.animateToPage(widget.imagenes.length - 1,
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut);
-                  }
-                },
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white70,
-                ),
-                onPressed: () {
-                  _pageController.nextPage(
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                  if (_currentPage == widget.imagenes.length - 1) {
-                    _pageController.animateToPage(0,
-                        duration: Duration(milliseconds: 300),
-                        curve: Curves.easeInOut);
-                  }
-                },
-              ),
+              dispositivo == 'PC'
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        _pageController.previousPage(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                        if (_currentPage == 0) {
+                          _pageController.animateToPage(
+                              widget.imagenes.length - 1,
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeInOut);
+                        }
+                      },
+                    )
+                  : Container(),
+              dispositivo == 'PC'
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        _pageController.nextPage(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                        if (_currentPage == widget.imagenes.length - 1) {
+                          _pageController.animateToPage(0,
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeInOut);
+                        }
+                      },
+                    )
+                  : Container(),
             ],
           ),
         )

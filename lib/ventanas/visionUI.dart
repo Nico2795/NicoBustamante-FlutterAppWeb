@@ -611,7 +611,7 @@ class _VisionUIState extends State<VisionUI> {
   Widget vistaMobile() {
     return (Container(
       width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height - 50,
+      height: MediaQuery.of(context).size.height,
       decoration: BoxDecoration(color: colorScaffold),
       child: Container(
         margin: EdgeInsets.all(20),
@@ -641,7 +641,7 @@ class _VisionUIState extends State<VisionUI> {
             ),
             (pantalla < 882)
                 ? Container(
-                    height: MediaQuery.of(context).size.height - 600,
+                    height: MediaQuery.of(context).size.height - 450,
                     child: columnaControlCamara(),
                     //decoration: BoxDecoration(color: Colors.black),
                   )
