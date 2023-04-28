@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:prueba/firebase_options.dart';
 import 'package:prueba/login/login.dart';
 import 'package:prueba/ventanas/eventosUI/allEvents.dart';
+import 'package:prueba/ventanas/shoppingUI/shoppingCartUI.dart';
 
 import 'sliderImagenesHeader/index.dart';
 
@@ -35,7 +36,12 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'CoffeeMondo'),
-      routes: {'/eventos': (context) => EventosUI(tipoUI: "")},
+      routes: {
+        '/eventos': (context) => EventosUI(tipoUI: ""),
+        '/carrito': (context) => ShoppingUI(
+              tipoUI: "carrito",
+            )
+      },
     );
   }
 }

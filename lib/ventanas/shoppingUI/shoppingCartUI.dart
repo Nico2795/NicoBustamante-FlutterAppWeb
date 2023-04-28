@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -21,34 +22,63 @@ import 'package:get/get.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/intl.dart';
 import '../templatesCards/cardTemplate.dart';
-import '../shoppingUI/shoppingCartUI.dart';
-import 'package:collection/collection.dart';
+import "../eventosUI/allEvents.dart";
 
 void main() {
   runApp(GetMaterialApp(
-    home: EventosUI(
-      tipoUI: null,
+    home: ShoppingUI(
+      tipoUI: "",
     ),
   ));
 }
 
-class obtenerListaCompras {
-  List<Map<String, dynamic>> listaCompras = [];
-  void agregarListaCompras(List<Map<String, dynamic>> nuevaListaCompras) {
-    listaCompras.addAll(nuevaListaCompras);
+class ShoppingUI extends StatefulWidget {
+  final tipoUI;
+  const ShoppingUI({required this.tipoUI});
+
+  @override
+  _ShoppingUIState createState() => _ShoppingUIState();
+}
+
+const String access_token =
+    "APP_USR-519707263701019-042611-ddcb72600592e72088947c072e6b3de1-340468762";
+
+class MercadoPagoService {
+  static Future<String> createPreference(
+      String description, double price, int quantity) async {
+    String url = "https://api.mercadopago.com/checkout/preferences";
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $access_token'
+    };
+    var body = {
+      "items": [
+        {
+          "title": description,
+          "unit_price": price,
+          "quantity": quantity,
+        }
+      ],
+      "back_urls": {
+        "success": "http://localhost:8080/feedback",
+        "failure": "http://localhost:8080/feedback",
+        "pending": "http://localhost:8080/feedback"
+      },
+      "auto_return": "approved"
+    };
+    final response = await http.post(Uri.parse(url),
+        headers: headers, body: json.encode(body));
+    if (response.statusCode == 201) {
+      var jsonResponse = json.decode(response.body);
+      return jsonResponse['id'];
+    } else {
+      throw Exception('Failed to create preference');
+    }
   }
 }
 
-class EventosUI extends StatefulWidget {
-  final tipoUI;
-  const EventosUI({required this.tipoUI});
-
-  @override
-  _EventosUIState createState() => _EventosUIState();
-}
-
-class _EventosUIState extends State<EventosUI> {
-  final obtenerLista = obtenerListaCompras();
+class _ShoppingUIState extends State<ShoppingUI> {
+  late EventosUI eventosUI;
   //Colores
   var colorScaffold = Color(0xffffebdcac);
   var colorNaranja = Color.fromARGB(255, 255, 79, 52);
@@ -67,8 +97,6 @@ class _EventosUIState extends State<EventosUI> {
   var mostrarFormulario2 = false;
   var mostrarDatosUsuario = false;
   var mostrarDatosUsuario2 = false;
-  var mostrarCarrito = false;
-  var mostrarCarrito2 = false;
   var uidCamara = "";
   var pantalla = 0.0;
   var eventosGuardados = [];
@@ -78,8 +106,13 @@ class _EventosUIState extends State<EventosUI> {
   int cantidadCompras = 0;
   int contadorCompras = 1;
 
+  List<Map<String, dynamic>> listaCompras = obtenerListaCompras().listaCompras;
+
+  // Hacer algo con la lista de compras
+
   void initState() {
     super.initState();
+    eventosUI = EventosUI(tipoUI: "carrito");
 
     try {
       _controller = VideoPlayerController.network(
@@ -561,14 +594,13 @@ class _EventosUIState extends State<EventosUI> {
                                 });
 
                                 // Agregar las nuevas compras a la lista de compras existente
-                                obtenerLista
-                                    .agregarListaCompras(nuevaListaCompras);
+                                /*  listaCompras.addAll(nuevaListaCompras); */
 
                                 fechasSeleccionadas = [];
                                 cantidadesSeleccionadas = [];
                                 cantidadesPorFecha = {};
 
-                                print(obtenerLista.listaCompras);
+                                /* print(listaCompras); */
                                 print(
                                     "La cantidad de compras que tienes es $cantidadCompras");
 
@@ -914,18 +946,10 @@ class _EventosUIState extends State<EventosUI> {
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height - 220,
-        child: mostrarGridImagenes
-            ? gridImagenes()
-            : mostrarFormulario
-                ? entradaFormulario()
-                : mostrarDatosUsuario
-                    ? datosUsuario()
-                    : mostrarCarrito
-                        ? vistaCarrito(obtenerLista.listaCompras)
-                        : Container());
+        child: vistaCarrito(listaCompras));
   }
 
-/* ---------------------VISTA CARRITO--------------------------------- */
+  /* ---------------------VISTA CARRITO--------------------------------- */
   int _total = 0;
 
   Widget vistaCarrito(List<Map<String, dynamic>> listaCompras) {
@@ -1197,134 +1221,6 @@ class _EventosUIState extends State<EventosUI> {
     );
   }
 
-  /* ----------------RESUMEN CARRITO--------------------------- */
-
-  Widget resumenCarrito(List<Map<String, dynamic>> listaCompras) {
-    return Dialog(
-      child: Container(
-        color: colorScaffold,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 600,
-              height: 100,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
-                color: colorMorado,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    spreadRadius: 5,
-                    blurRadius: 7,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  'Resumen de tu compra',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            Container(
-              color: colorScaffold,
-              width: 600,
-              height: 200,
-              margin: EdgeInsets.only(bottom: 10),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Nombre del evento'),
-                        Text('Fecha'),
-                        Text('Cantidad'),
-                        Text('Precio'),
-                      ],
-                    ),
-                    Divider(),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: listaCompras.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        final compra =
-                            listaCompras[index]['compra${index + 1}'];
-                        return Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(compra!['eventoNombre']),
-                                Text(DateFormat('dd/MM/yyyy')
-                                    .format(compra!['fecha'].toLocal())),
-                                Text(compra!['cantidad']),
-                                Text('\$${compra['precio'].toString()}')
-                              ],
-                            ),
-                            Divider(),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 600,
-              height: 40,
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ShoppingUI(
-                                  tipoUI: "carrito",
-                                )));
-                  });
-                },
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.blue),
-                ),
-                child: Text('Ir al carrito'),
-              ),
-            ),
-            SizedBox(
-              height: 10,
-              child:
-                  DecoratedBox(decoration: BoxDecoration(color: colorScaffold)),
-            ),
-            SizedBox(
-              width: 600,
-              height: 40,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Acción del botón "Ir a pagar directamente"
-                },
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(colorNaranja),
-                ),
-                child: Text('Ir a pagar directamente'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget vistaWeb() {
     return (Dialog(
       backgroundColor: Color.fromARGB(0, 0, 0, 0),
@@ -1368,14 +1264,12 @@ class _EventosUIState extends State<EventosUI> {
                         Center(
                             child: Text(
                           mostrarGridImagenes
-                              ? 'Eventos'
+                              ? 'Carrito'
                               : mostrarFormulario
                                   ? "Comprar entradas"
                                   : mostrarDatosUsuario
                                       ? "Ingresa tus datos"
-                                      : mostrarCarrito
-                                          ? "Carrito de compras"
-                                          : "Carrito",
+                                      : "",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 30,
@@ -1401,14 +1295,12 @@ class _EventosUIState extends State<EventosUI> {
                                 child: mostrarGridImagenes
                                     ? GestureDetector(
                                         onTap: () {
-                                          if (cantidadCompras > 0)
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return resumenCarrito(
-                                                    obtenerLista.listaCompras);
-                                              },
-                                            );
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return vistaCarrito(listaCompras);
+                                            },
+                                          );
                                         },
                                         child: mostrarControl2
                                             ? Center(
@@ -1701,18 +1593,11 @@ class _EventosUIState extends State<EventosUI> {
                                               ),
                                             ),
                                           )
-                                        : mostrarCarrito
-                                            ? Icon(
-                                                Icons
-                                                    .shopping_cart_checkout_rounded,
-                                                color: colorNaranja,
-                                                size: 60,
-                                              )
-                                            : Icon(
-                                                Icons.confirmation_num_rounded,
-                                                color: colorNaranja,
-                                                size: 60,
-                                              ),
+                                        : Icon(
+                                            Icons.confirmation_num_rounded,
+                                            color: colorNaranja,
+                                            size: 60,
+                                          ),
                                   ),
                                 ),
                               )
@@ -1743,7 +1628,7 @@ class _EventosUIState extends State<EventosUI> {
                 showDialog(
                   context: context,
                   builder: (BuildContext context) {
-                    return resumenCarrito(obtenerLista.listaCompras);
+                    return vistaCarrito(listaCompras);
                   },
                 );
               },

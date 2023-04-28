@@ -13,15 +13,15 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_maps_flutter_web/google_maps_flutter_web.dart';
 
-class AllResenasUI extends StatefulWidget {
+class savedResenasUI extends StatefulWidget {
   final tipoUI;
-  const AllResenasUI({required this.tipoUI});
+  const savedResenasUI({required this.tipoUI});
 
   @override
-  _AllResenasUIState createState() => _AllResenasUIState();
+  _savedResenasUIState createState() => _savedResenasUIState();
 }
 
-class _AllResenasUIState extends State<AllResenasUI> {
+class _savedResenasUIState extends State<savedResenasUI> {
   var colorScaffold = Color(0xffffebdcac);
   var colorNaranja = Color.fromARGB(255, 255, 79, 52);
   var colorMorado = Color.fromARGB(0xff, 0x52, 0x01, 0x9b);
@@ -39,12 +39,12 @@ class _AllResenasUIState extends State<AllResenasUI> {
   var resenasKeys = [];
   var listaResenas = [];
 
-  var abrirCalificaciones = false;
-  var abrirCalificaciones2 = false;
-  var abrirCalificaciones3 = false;
-  var abrirCalificaciones4 = false;
+  var abrirCalificaciones;
+  var abrirCalificaciones2;
+  var abrirCalificaciones3;
+  var abrirCalificaciones4;
 
-  var tarjetaScrolled = false;
+  var tarjetaScrolled;
 
   var dispositivo = '';
 
@@ -56,7 +56,7 @@ class _AllResenasUIState extends State<AllResenasUI> {
     User? user = FirebaseAuth.instance.currentUser;
     firestore.collection('users').doc(user?.uid).get().then((value) {
       setState(() {
-        resenasGuardadas = value.data()!['resenasGuardadas'];
+        resenasGuardadas = value.data()!['reseñasGuardadas'];
       });
     });
   }
@@ -84,10 +84,11 @@ class _AllResenasUIState extends State<AllResenasUI> {
           FirebaseFirestore.instance.collection("users").doc(user?.uid);
 
       docRef.update({
-        'resenasGuardadas': FieldValue.arrayUnion([uidResena])
+        'reseñasGuardadas': FieldValue.arrayUnion([uidResena])
       });
       print('Ingreso de informacion exitoso.');
       obtenerResenasGuardadas();
+      print(resenasGuardadas);
       // Una vez actualizada la informacion, se devuelve a InfoUser para mostrar su nueva informacion
     } catch (e) {
       print("Error al intentar ingresar informacion");
@@ -106,10 +107,11 @@ class _AllResenasUIState extends State<AllResenasUI> {
       // Se actualiza la informacion del usuario actual mediante los controladores, que son los campos de informacion que el usuario debe rellenar
 
       docRef.update({
-        'resenasGuardadas': FieldValue.arrayRemove([uidResena])
+        'reseñasGuardadas': FieldValue.arrayRemove([uidResena])
       });
       print('Ingreso de informacion exitoso.');
       obtenerResenasGuardadas();
+      print(resenasGuardadas);
       // Una vez actualizada la informacion, se devuelve a InfoUser para mostrar su nueva informacion
     } catch (e) {
       print("Error al intentar ingresar informacion");
@@ -127,7 +129,9 @@ class _AllResenasUIState extends State<AllResenasUI> {
     List<Map<String, dynamic>> resenasDataList = [];
     for (var doc in resenasQuerySnapshot.docs) {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      resenasDataList.add({'data': data, 'uid': doc.id});
+      resenasGuardadas.contains(doc.id)
+          ? resenasDataList.add({'data': data, 'uid': doc.id})
+          : null;
     }
 
     setState(() {
@@ -362,11 +366,29 @@ class _AllResenasUIState extends State<AllResenasUI> {
     return listaPreguntas;
   }
 
+  Widget moduloCalificaciones(Map<String, dynamic> listaCalificaciones) {
+    return (AnimatedContainer(
+      duration: Duration(milliseconds: 800),
+      curve: Curves.easeInOutCubicEmphasized,
+      height: abrirCalificaciones3 ? 340 : 150,
+      width: dispositivo == 'PC' ? 450 : 370,
+      decoration: BoxDecoration(
+          color: colorMorado,
+          borderRadius: BorderRadius.all(Radius.circular(20))),
+      child: Container(
+        margin: EdgeInsets.only(top: 5),
+        child: Column(
+          children: obtenerPreguntas(listaCalificaciones),
+        ),
+      ),
+    ));
+  }
+
   Widget moduloComentario(String comentario, String creador) {
     return AnimatedOpacity(
       duration: Duration(milliseconds: 200),
       opacity: abrirCalificaciones || tarjetaScrolled ? 0 : 1,
-      child: abrirCalificaciones || tarjetaScrolled
+      child: abrirCalificaciones2 || tarjetaScrolled
           ? Container()
           : Column(
               children: [
@@ -415,7 +437,7 @@ class _AllResenasUIState extends State<AllResenasUI> {
     return (AnimatedOpacity(
         duration: Duration(milliseconds: 500),
         opacity: abrirCalificaciones ? 0 : 1,
-        child: abrirCalificaciones
+        child: abrirCalificaciones2
             ? Container()
             : Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -478,24 +500,6 @@ class _AllResenasUIState extends State<AllResenasUI> {
                   ],
                 ),
               )));
-  }
-
-  Widget moduloCalificaciones(Map<String, dynamic> listaCalificaciones) {
-    return (AnimatedContainer(
-      duration: Duration(milliseconds: 800),
-      curve: Curves.easeInOutCubicEmphasized,
-      height: abrirCalificaciones3 ? 340 : 150,
-      width: dispositivo == 'PC' ? 450 : 370,
-      decoration: BoxDecoration(
-          color: colorMorado,
-          borderRadius: BorderRadius.all(Radius.circular(20))),
-      child: Container(
-        margin: EdgeInsets.only(top: 5),
-        child: Column(
-          children: obtenerPreguntas(listaCalificaciones),
-        ),
-      ),
-    ));
   }
 
   Widget sliderImagenes() {
@@ -565,7 +569,7 @@ class _AllResenasUIState extends State<AllResenasUI> {
                     String creador = entry.value["data"]["uid_usuario"];
                     Map<String, dynamic> listaCalificaciones =
                         entry.value["data"]["reseña"];
-
+                    print('esto pasa');
                     return Container(
                       margin: EdgeInsets.symmetric(vertical: 20),
                       decoration: BoxDecoration(
@@ -763,8 +767,7 @@ class _AllResenasUIState extends State<AllResenasUI> {
     });
 
     return Container(
-        height: MediaQuery.of(context).size.height - 180,
-        //color: Colors.blue,
+        width: MediaQuery.of(context).size.width,
         child: (listaResenas.isEmpty && widget.tipoUI == 'Reseñas guardadas')
             ? Container(
                 alignment: Alignment.center,
@@ -780,24 +783,13 @@ class _AllResenasUIState extends State<AllResenasUI> {
             : sliderImagenes());
   }
 
-  String obtenerNombreUser(String uid) {
-    var retorno = '';
-    listaResenas.forEach((resena) {
-      if (uid == resena['uid']) {
-        retorno = resena['data']['nickname_usuario'];
-      }
-    });
-
-    return retorno;
-  }
-
   Widget vistaWeb() {
     return (Dialog(
       backgroundColor: Color.fromARGB(0, 0, 0, 0),
       child: AnimatedContainer(
         duration: Duration(milliseconds: 500),
         curve: Curves.easeInOutBack,
-        height: MediaQuery.of(context).size.height - 50,
+        height: MediaQuery.of(context).size.height - 120,
         width: 1280,
         decoration: BoxDecoration(
             color: colorScaffold,
@@ -906,7 +898,7 @@ class _AllResenasUIState extends State<AllResenasUI> {
                                 widget.tipoUI == 'Reseñas guardadas' &&
                                         resenasGuardadas.isEmpty
                                     ? ''
-                                    : obtenerNombreUser(nombreResenaActual),
+                                    : nombreResenaActual,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
@@ -944,7 +936,7 @@ class _AllResenasUIState extends State<AllResenasUI> {
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                   child: Text(
-                    'Todas las reseñas',
+                    'Reseñas guardadas',
                     style: TextStyle(
                         color: colorNaranja,
                         fontWeight: FontWeight.bold,
@@ -953,13 +945,25 @@ class _AllResenasUIState extends State<AllResenasUI> {
                 ),
               ),
             ),
-            Container(
-              alignment: Alignment.topCenter,
-              margin: EdgeInsets.symmetric(vertical: 20),
-              decoration:
-                  BoxDecoration(borderRadius: BorderRadius.circular(20)),
-              child: sliderImagenes(),
-            ),
+            resenasGuardadas.isEmpty
+                ? Container(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text('Sin reseñas guardadas',
+                          style: TextStyle(
+                              color: colorMorado,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24)),
+                    ),
+                  )
+                : Container(
+                    alignment: Alignment.topCenter,
+                    margin: EdgeInsets.all(20),
+                    decoration:
+                        BoxDecoration(borderRadius: BorderRadius.circular(20)),
+                    child: sliderImagenes(),
+                  ),
           ],
         ),
       ),

@@ -15,6 +15,9 @@ import 'package:prueba/ventanas/feedbackUI/AllfeedbackUI.dart';
 import 'package:prueba/ventanas/feedbackUI/myFeedbackUI.dart';
 import 'package:prueba/ventanas/feedbackUI/savedFeedbackUI.dart';
 import 'package:prueba/ventanas/eventosUI/allEvents.dart';
+import 'package:prueba/ventanas/eventosUI/myEventsUI.dart';
+import 'package:prueba/ventanas/eventosUI/eventsSavedUI.dart';
+import 'package:prueba/ventanas/shoppingUI/shoppingCartUI.dart';
 
 import 'package:prueba/ventanas/visionUI.dart';
 
@@ -91,6 +94,10 @@ class _HeaderState extends State<Header> {
   var openFeedback = false;
   var openFeedback2 = false;
   var feedbackUI = '';
+
+  var openShoppingCart = false;
+  var openShoppingCart2 = false;
+  var shoppingUI = "";
 
   var mostrarMenuCafeteria = false;
   var mostrarMenuCafeteria2 = false;
@@ -325,6 +332,15 @@ class _HeaderState extends State<Header> {
         Future.delayed(Duration(milliseconds: 500), () {
           mostrarMenuEvento2 = true;
         });
+      } else if (menu == 'Carrito') {
+        openShoppingCart = true;
+        cerrarSubMenu('Cafeterias');
+        cerrarSubMenu('Reseñas');
+        cerrarSubMenu('Servicios');
+        cerrarSubMenu('Mi cuenta');
+        Future.delayed(Duration(milliseconds: 500), () {
+          openShoppingCart2 = true;
+        });
       } else if (menu == 'Mi cuenta') {
         mostrarMenuCuenta = true;
         cerrarSubMenu('Cafeterias');
@@ -382,7 +398,7 @@ class _HeaderState extends State<Header> {
     });
   }
 
-  void cerrarSideBar() {
+/*   void cerrarSideBar() {
     setState(() {
       sideBar3 = !sideBar3;
     });
@@ -396,7 +412,7 @@ class _HeaderState extends State<Header> {
         sideBar = !sideBar;
       });
     });
-  }
+  } */
 
   void cerrarModuloCafeteria(String modulo) {
     setState(() {
@@ -420,6 +436,15 @@ class _HeaderState extends State<Header> {
         openMyEvents2 = false;
         openSavedEvents = false;
         openSavedEvents2 = false;
+      }
+    });
+  }
+
+  void cerrarModuloCarrito(String modulo) {
+    setState(() {
+      if (modulo == 'Carrito') {
+        openShoppingCart = false;
+        openShoppingCart2 = false;
       }
     });
   }
@@ -534,6 +559,8 @@ class _HeaderState extends State<Header> {
                       ? cerrarSubMenu(menu)
                       : abrirSubMenu(menu)
                   : cerrarSubMenu(menu);
+            } else if (menu == 'Carrito') {
+              dispositivo != 'PC' ? openShoppingCart : abrirCarritoUI(menu);
             } else if (menu == 'Mi cuenta') {
               dispositivo != 'PC'
                   ? mostrarMenuCuenta
@@ -587,6 +614,10 @@ class _HeaderState extends State<Header> {
                               ? cerrarSubMenu(menu)
                               : abrirSubMenu(menu)
                           : cerrarSubMenu(menu);
+                    } else if (menu == 'Carrito') {
+                      dispositivo != 'PC'
+                          ? openShoppingCart
+                          : abrirCarritoUI(menu);
                     } else if ((menu == 'Cerrar sesion')) {
                       cerrarSesion();
                     } else if (menu == 'Iniciar sesion') {
@@ -686,7 +717,7 @@ class _HeaderState extends State<Header> {
                   if (sideBar2) {
                     cerrarSubMenu('Todos');
                     Future.delayed(Duration(milliseconds: 350), () {
-                      cerrarSideBar();
+                      /*  cerrarSideBar(); */
                     });
                   } else {
                     abrirSideBar();
@@ -764,7 +795,7 @@ class _HeaderState extends State<Header> {
 
   void abrirEventosUI(String menu) {
     print(menu);
-    if (menu == 'Todos las eventos') {
+    if (menu == 'Todos los eventos') {
       setState(() {
         openAllEvents = true;
         openMyEvents2 = false;
@@ -798,6 +829,15 @@ class _HeaderState extends State<Header> {
           openMyEvents = false;
           openSavedEvents2 = true;
         });
+      });
+    }
+  }
+
+  void abrirCarritoUI(String menu) {
+    print(menu);
+    if (menu == 'Carrito') {
+      setState(() {
+        openShoppingCart = true;
       });
     }
   }
@@ -1050,7 +1090,7 @@ class _HeaderState extends State<Header> {
                       btnSubSubSideBar(
                           '${ucFirst(btnText.split(' ')[1])} ${btnText.split(' ')[1] == 'eventos' ? 'guardados' : 'guardadas'}'),
                       btnSubSubSideBar(
-                          '${btnText.split(' ')[1] == 'eventos' ? 'Todos' : 'Todas'} las ${btnText.split(' ')[1].toLowerCase()}'),
+                          '${btnText.split(' ')[1] == 'eventos' ? 'Todos' : 'Todas'} ${btnText.split(' ')[1].toLowerCase() == 'eventos' ? 'los' : 'las'} ${btnText.split(' ')[1].toLowerCase()}'),
                     ],
                   ),
                 )
@@ -1290,69 +1330,114 @@ class _HeaderState extends State<Header> {
                                                     Duration(milliseconds: 500),
                                                 child: DataUI(),
                                               )
-                                            : openAllEvents
+                                            : openMyEvents
                                                 ? AnimatedOpacity(
                                                     opacity:
-                                                        openAllEvents2 ? 1 : 0,
+                                                        openMyEvents2 ? 1 : 0,
                                                     duration: Duration(
                                                         milliseconds: 500),
-                                                    child: EventosUI(
+                                                    child: myEventsUI(
                                                       tipoUI: eventsUI,
                                                     ),
                                                   )
-                                                : Row(
-                                                    children: [
-                                                      containerSideBar(),
-                                                      InkWell(
-                                                        mouseCursor:
-                                                            MouseCursor.defer,
-                                                        onTap: () {},
-                                                        child:
-                                                            containerSubSideBar(),
-                                                        onHover: (value) {
-                                                          print(value);
-                                                          setState(() {
-                                                            hoverSubSideBar =
-                                                                value;
-                                                          });
-                                                          if (!hoverSubSideBar &&
-                                                              dispositivo ==
-                                                                  'PC') {
-                                                            setState(() {
-                                                              mostrarMenuCafeteria2 =
-                                                                  false;
-                                                              mostrarMenuResena2 =
-                                                                  false;
-                                                              mostrarMenuServicio2 =
-                                                                  false;
-                                                              mostrarMenuEvento2 =
-                                                                  false;
-                                                              mostrarMenuCuenta2 =
-                                                                  false;
-                                                            });
-                                                            Future.delayed(
-                                                                Duration(
-                                                                    milliseconds:
-                                                                        300),
-                                                                () {
-                                                              setState(() {
-                                                                mostrarMenuCafeteria =
-                                                                    false;
-                                                                mostrarMenuResena =
-                                                                    false;
-                                                                mostrarMenuServicio =
-                                                                    false;
-                                                                mostrarMenuEvento =
-                                                                    false;
-                                                                mostrarMenuCuenta =
-                                                                    false;
-                                                              });
-                                                            });
-                                                          }
-                                                        },
+                                                : openAllEvents
+                                                    ? AnimatedOpacity(
+                                                        opacity: openAllEvents2
+                                                            ? 1
+                                                            : 0,
+                                                        duration: Duration(
+                                                            milliseconds: 500),
+                                                        child: EventosUI(
+                                                          tipoUI: eventsUI,
+                                                        ),
                                                       )
-                                                    ],
-                                                  ),
+                                                    : openSavedEvents
+                                                        ? AnimatedOpacity(
+                                                            opacity:
+                                                                openSavedEvents2
+                                                                    ? 1
+                                                                    : 0,
+                                                            duration: Duration(
+                                                                milliseconds:
+                                                                    500),
+                                                            child:
+                                                                eventsSavedUI(
+                                                              tipoUI: eventsUI,
+                                                            ),
+                                                          )
+                                                        : openShoppingCart
+                                                            ? AnimatedOpacity(
+                                                                opacity:
+                                                                    openShoppingCart2
+                                                                        ? 1
+                                                                        : 0,
+                                                                duration: Duration(
+                                                                    milliseconds:
+                                                                        500),
+                                                                child:
+                                                                    ShoppingUI(
+                                                                  tipoUI:
+                                                                      shoppingUI,
+                                                                ),
+                                                              )
+                                                            : Row(
+                                                                children: [
+                                                                  containerSideBar(),
+                                                                  InkWell(
+                                                                    mouseCursor:
+                                                                        MouseCursor
+                                                                            .defer,
+                                                                    onTap:
+                                                                        () {},
+                                                                    child:
+                                                                        containerSubSideBar(),
+                                                                    onHover:
+                                                                        (value) {
+                                                                      print(
+                                                                          value);
+                                                                      setState(
+                                                                          () {
+                                                                        hoverSubSideBar =
+                                                                            value;
+                                                                      });
+                                                                      if (!hoverSubSideBar &&
+                                                                          dispositivo ==
+                                                                              'PC') {
+                                                                        setState(
+                                                                            () {
+                                                                          mostrarMenuCafeteria2 =
+                                                                              false;
+                                                                          mostrarMenuResena2 =
+                                                                              false;
+                                                                          mostrarMenuServicio2 =
+                                                                              false;
+                                                                          mostrarMenuEvento2 =
+                                                                              false;
+                                                                          mostrarMenuCuenta2 =
+                                                                              false;
+                                                                        });
+                                                                        Future.delayed(
+                                                                            Duration(milliseconds: 300),
+                                                                            () {
+                                                                          setState(
+                                                                              () {
+                                                                            mostrarMenuCafeteria =
+                                                                                false;
+                                                                            mostrarMenuResena =
+                                                                                false;
+                                                                            mostrarMenuServicio =
+                                                                                false;
+                                                                            mostrarMenuEvento =
+                                                                                false;
+                                                                            mostrarMenuCuenta =
+                                                                                false;
+                                                                          });
+                                                                        });
+                                                                      }
+                                                                    },
+                                                                  )
+                                                                ],
+                                                              ),
       ],
     ));
   }

@@ -60,6 +60,7 @@ dependencies:
   form_builder_validators: ^8.5.0
   flutter_inappwebview: ^5.7.2+3
   dio: ^5.1.1
+  collection: ^1.17.0
 
 dev_dependencies:
   flutter_test:
