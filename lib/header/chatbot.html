@@ -1,0 +1,43 @@
+<html lang="es">
+	<head>
+		<link rel="stylesheet" href="main.css" />
+		<meta charset="utf-8" />
+		<title></title>
+	</head>
+	<body>
+		<script src="https://www.gstatic.com/dialogflow-console/fast/messenger-cx/bootstrap.js?v=1"></script>
+		<df-messenger
+			df-cx="true"
+			location="us-central1"
+			chat-title="Agente Virtual de CoffeeMondo ☕"
+			agent-id="aeee7fab-0176-4d4f-8bd5-c1f2c7298ea0"
+			language-code="es"
+			chat-icon="assets/logo.png"
+		>
+		</df-messenger>
+		<script>
+			window.addEventListener("dfMessengerLoaded", function (event) {
+				const dfMessenger = document.querySelector("df-messenger");
+				const openText =
+					"¡Hola, bienvenid@! ¿Deseas interactuar con nuestro agente virtual: Mondo Bot?";
+				dfMessenger.renderCustomText(openText);
+			});
+		</script>
+
+		<script>
+			const dfMessenger = document.querySelector("df-messenger");
+			dfMessenger.addEventListener("event-type", function (event) {});
+		</script>
+		<h1></h1>
+	</body>
+	<style>
+		df-messenger {
+			--df-messenger-bot-message: #ff4f34ff;
+			--df-messenger-button-titlebar-color: #ff4f34ff;
+			--df-messenger-chat-background-color: #603d8dff;
+			--df-messenger-font-color: white;
+			--df-messenger-send-icon: #ff4f34ff;
+			--df-messenger-user-message: #d7432cff;
+		}
+	</style>
+</html>

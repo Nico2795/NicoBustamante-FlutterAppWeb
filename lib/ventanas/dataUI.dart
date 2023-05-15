@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
+
 import 'package:video_player/video_player.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:webviewx/webviewx.dart';
+import 'package:webviewx_plus/webviewx_plus.dart';
 
 class DataUI extends StatefulWidget {
   const DataUI({super.key});

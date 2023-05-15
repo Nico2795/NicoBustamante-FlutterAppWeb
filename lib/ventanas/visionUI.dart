@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
+
 import 'package:flutter_launcher_icons/xml_templates.dart';
 import 'package:video_player/video_player.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -404,13 +404,6 @@ class _VisionUIState extends State<VisionUI> {
     ));
   }
 
-  Widget dataStudio() {
-    return Html(
-      data:
-          '<iframe src="https://lookerstudio.google.com/embed/reporting/32e7bee6-09fc-4ebd-a389-52fc9cfcbbfb/page/zf4CD" frameborder="0" style="border:0; width: 100%; height: 100%;" allowfullscreen></iframe>',
-    );
-  }
-
   Widget vistaDataStudio() {
     Future.delayed(Duration(seconds: 1), () {
       setState(() {
@@ -421,7 +414,7 @@ class _VisionUIState extends State<VisionUI> {
       width: 980,
       height: 540,
       color: Colors.black,
-      child: dataStudio(),
+      child: Container(),
     );
   }
 

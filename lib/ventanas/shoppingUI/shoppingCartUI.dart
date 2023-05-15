@@ -1,14 +1,18 @@
 import 'dart:convert';
-import 'dart:html';
+import 'dart:html' as html;
 import 'dart:ui';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:js/js.dart';
+import 'package:quickalert/quickalert.dart';
+import 'package:cool_alert/cool_alert.dart';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
 import 'package:flutter_launcher_icons/xml_templates.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:image_network/image_network.dart';
@@ -16,18 +20,21 @@ import 'package:prueba/sliderImagenesHeader/index.dart';
 import 'package:video_player/video_player.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:http/http.dart' as http;
-import 'package:webviewx/webviewx.dart';
+import 'package:webviewx_plus/webviewx_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/intl.dart';
 import '../templatesCards/cardTemplate.dart';
 import "../eventosUI/allEvents.dart";
+import "../../header/header.dart";
+import 'package:mercadopago_sdk/mercadopago_sdk.dart';
+import 'package:art_sweetalert/art_sweetalert.dart';
 
 void main() {
   runApp(GetMaterialApp(
     home: ShoppingUI(
-      tipoUI: "",
+      tipoUI: "Carrito",
     ),
   ));
 }
@@ -40,44 +47,9 @@ class ShoppingUI extends StatefulWidget {
   _ShoppingUIState createState() => _ShoppingUIState();
 }
 
-const String access_token =
-    "APP_USR-519707263701019-042611-ddcb72600592e72088947c072e6b3de1-340468762";
-
-class MercadoPagoService {
-  static Future<String> createPreference(
-      String description, double price, int quantity) async {
-    String url = "https://api.mercadopago.com/checkout/preferences";
-    var headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $access_token'
-    };
-    var body = {
-      "items": [
-        {
-          "title": description,
-          "unit_price": price,
-          "quantity": quantity,
-        }
-      ],
-      "back_urls": {
-        "success": "http://localhost:8080/feedback",
-        "failure": "http://localhost:8080/feedback",
-        "pending": "http://localhost:8080/feedback"
-      },
-      "auto_return": "approved"
-    };
-    final response = await http.post(Uri.parse(url),
-        headers: headers, body: json.encode(body));
-    if (response.statusCode == 201) {
-      var jsonResponse = json.decode(response.body);
-      return jsonResponse['id'];
-    } else {
-      throw Exception('Failed to create preference');
-    }
-  }
-}
-
 class _ShoppingUIState extends State<ShoppingUI> {
+  var mp = MP.fromAccessToken(
+      "TEST-6395019259410612-042618-e59b68bb43b46338cb4abf5cc3546656-1361503494");
   late EventosUI eventosUI;
   //Colores
   var colorScaffold = Color(0xffffebdcac);
@@ -106,13 +78,27 @@ class _ShoppingUIState extends State<ShoppingUI> {
   int cantidadCompras = 0;
   int contadorCompras = 1;
 
-  List<Map<String, dynamic>> listaCompras = obtenerListaCompras().listaCompras;
-
   // Hacer algo con la lista de compras
 
   void initState() {
     super.initState();
     eventosUI = EventosUI(tipoUI: "carrito");
+
+    //setup listener ---------------------------------
+    // Registra un listener para el evento "message"
+    html.window.addEventListener("message", (html.Event event) {
+      // Convierte la lista de path en una cadena separada por "/"
+      String message = event.path.map((e) => e.toString()).join("/");
+      // Muestra un dialog en caso de éxito
+      ArtSweetAlert.show(
+          context: context,
+          artDialogArgs: ArtDialogArgs(
+              type: ArtSweetAlertType.success,
+              title: "Pago completado con exito!",
+              text: "Nos vemos pronto"));
+      // Muestra el mensaje en la consola
+      print("Mensaje recibido desde JavaScript: $message");
+    });
 
     try {
       _controller = VideoPlayerController.network(
@@ -149,8 +135,6 @@ class _ShoppingUIState extends State<ShoppingUI> {
     }
     return eventosDataList;
   }
-
-  late InAppWebViewController webView;
 
   var nombreEvento = "";
 
@@ -326,66 +310,72 @@ class _ShoppingUIState extends State<ShoppingUI> {
                       ),
                       Expanded(
                           flex: 150,
-                          child: Column(
-                            children: fechasSeleccionadas.map((fecha) {
-                              final index = todasLasFechas.indexOf(fecha);
-                              final cantidad = cantidadesPorFecha[fecha] ?? 0;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Fecha: ${DateFormat('dd/MMM/yyyy').format(fecha)}",
-                                    style: TextStyle(color: colorMorado),
-                                  ),
-                                  FormBuilderDropdown(
-                                    dropdownColor: colorNaranja,
-                                    focusColor: Colors.transparent,
-                                    name: 'cantidad${index + 1}',
-                                    decoration: InputDecoration(),
-                                    items: [
-                                      DropdownMenuItem(
-                                        value: 0,
-                                        child: Text(
-                                          '0',
-                                          style: TextStyle(color: colorMorado),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: fechasSeleccionadas.map((fecha) {
+                                final index = todasLasFechas.indexOf(fecha);
+                                final cantidad = cantidadesPorFecha[fecha] ?? 0;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Fecha: ${DateFormat('dd/MMM/yyyy').format(fecha)}",
+                                      style: TextStyle(color: colorMorado),
+                                    ),
+                                    FormBuilderDropdown(
+                                      dropdownColor: colorNaranja,
+                                      focusColor: Colors.transparent,
+                                      name: 'cantidad${index + 1}',
+                                      decoration: InputDecoration(),
+                                      items: [
+                                        DropdownMenuItem(
+                                          value: 0,
+                                          child: Text(
+                                            '0',
+                                            style:
+                                                TextStyle(color: colorMorado),
+                                          ),
                                         ),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 1,
-                                        child: Text(
-                                          '1',
-                                          style: TextStyle(color: colorMorado),
+                                        DropdownMenuItem(
+                                          value: 1,
+                                          child: Text(
+                                            '1',
+                                            style:
+                                                TextStyle(color: colorMorado),
+                                          ),
                                         ),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 2,
-                                        child: Text(
-                                          '2',
-                                          style: TextStyle(color: colorMorado),
+                                        DropdownMenuItem(
+                                          value: 2,
+                                          child: Text(
+                                            '2',
+                                            style:
+                                                TextStyle(color: colorMorado),
+                                          ),
                                         ),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 3,
-                                        child: Text(
-                                          '3',
-                                          style: TextStyle(color: colorMorado),
+                                        DropdownMenuItem(
+                                          value: 3,
+                                          child: Text(
+                                            '3',
+                                            style:
+                                                TextStyle(color: colorMorado),
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        final index =
-                                            todasLasFechas.indexOf(fecha);
-                                        cantidadesPorFecha[fecha] =
-                                            int.parse(value.toString());
-                                        print(cantidadesPorFecha);
-                                      });
-                                    },
-                                    initialValue: cantidad,
-                                  ),
-                                ],
-                              );
-                            }).toList(),
+                                      ],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          final index =
+                                              todasLasFechas.indexOf(fecha);
+                                          cantidadesPorFecha[fecha] =
+                                              int.parse(value.toString());
+                                          print(cantidadesPorFecha);
+                                        });
+                                      },
+                                      initialValue: cantidad,
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ))
                     ],
                   ),
@@ -403,27 +393,38 @@ class _ShoppingUIState extends State<ShoppingUI> {
                     foregroundColor: colorNaranja,
                   ),
                   onPressed: () {
-                    if (_formKey.currentState!.saveAndValidate()) {
-                      var formData = _formKey.currentState!.value;
+                    if (fechasSeleccionadas.isNotEmpty &&
+                        cantidadesPorFecha.values
+                            .any((cantidad) => cantidad > 0)) {
+                      if (_formKey.currentState!.saveAndValidate()) {
+                        var formData = _formKey.currentState!.value;
 
-                      // Aquí puedes hacer lo que quieras con los valores de fecha y cantidad
+                        // Aquí puedes hacer lo que quieras con los valores de fecha y cantidad
 
-                      //Snack si es que corresponde
-/*                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content:
-                              Text('Tu entrada ha sido agregada al carrito'),
-                        ),
-                      ); */
+                        //Snack si es que corresponde
+                        /*  ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text('Tu entrada ha sido agregada al carrito'),
+                          ),
+                        ); */
 
-                      setState(() {
-                        mostrarDatosUsuario = true;
-                        mostrarFormulario = false;
-                      });
+                        setState(() {
+                          mostrarDatosUsuario = true;
+                          mostrarFormulario = false;
+                        });
+                      } else {
+                        setState(() {
+                          autoValidate = true;
+                        });
+                      }
                     } else {
-                      setState(() {
-                        autoValidate = true;
-                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Debes seleccionar al menos una fecha y una cantidad'),
+                        ),
+                      );
                     }
                   },
                   child: Text(
@@ -726,6 +727,34 @@ class _ShoppingUIState extends State<ShoppingUI> {
 
   String nombreEventoActual = "";
 
+  Future<Map<String, dynamic>> armarPreferencia() async {
+    var preference = {
+      "items": [
+        {
+          'title': 'Mi producto',
+          'quantity': 1,
+          'currency_id': 'CLP',
+          'unit_price': 1000
+        },
+        {
+          'title': 'Mi producto 2',
+          'quantity': 2,
+          'currency_id': 'CLP',
+          'unit_price': 1000
+        }
+      ],
+    };
+
+    var result = await mp.createPreference(preference);
+
+    return result;
+  }
+
+  Future<void> dispararCheckout() async {
+    var result = await armarPreferencia();
+    print(result['response']);
+  }
+
   Widget btnEvento(
       IconData icono, String tipo, String nombre, String UidEvento) {
     return InkWell(
@@ -897,40 +926,42 @@ class _ShoppingUIState extends State<ShoppingUI> {
                       : MediaQuery.of(context).size.width,
                   margin: EdgeInsets.only(left: 0, top: 0),
                   child: cardTemplate(
-                      template: "Eventos",
-                      title: ubicacion,
-                      title2: nombre,
-                      title3: "Precio",
-                      image: urlImagen,
-                      dispositivo: dispositivo,
-                      body: Container(
-                        width: 500,
-                        height: 236,
-                        child: Column(
-                          children: [
-                            Expanded(child: moduloInformacion(descripcion)),
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  moduloFecha(fecha),
-                                  SizedBox(
-                                    height: 5,
-                                  ),
-                                  btnsEvento(
-                                      'Nombre del evento',
-                                      'Creador del evento',
-                                      'ID del evento',
-                                      _eventoSeleccionado,
-                                      entry.value)
-                                ],
-                              ),
+                    template: "Eventos",
+                    title: ubicacion,
+                    title2: nombre,
+                    title3: "Precio",
+                    image: urlImagen,
+                    dispositivo: dispositivo,
+                    body: Container(
+                      width: 500,
+                      height: 236,
+                      child: Column(
+                        children: [
+                          Expanded(child: moduloInformacion(descripcion)),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                moduloFecha(fecha),
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                btnsEvento(
+                                    'Nombre del evento',
+                                    'Creador del evento',
+                                    'ID del evento',
+                                    _eventoSeleccionado,
+                                    entry.value)
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      icon: Icons.location_on));
+                    ),
+                    icon: Icons.location_on,
+                    building: '',
+                  ));
             }).toList(),
           ),
         );
@@ -943,10 +974,349 @@ class _ShoppingUIState extends State<ShoppingUI> {
   }; */
 
   Widget vistaTransbankStudio() {
+    var listaCompras = ListaComprasInheritedWidget.of(context).listaCompras;
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height - 220,
         child: vistaCarrito(listaCompras));
+  }
+
+/* ----------------------Info GPAY--------------------------------------- */
+  /* -------------------CANAL ENTRE JS Y FLUTTER------------- */
+  final webViewChannel = EventChannel('webViewChannel');
+  late WebViewXController webviewController;
+  int total = 0;
+  int precioUnitario = 0;
+
+  Widget gpayTest() {
+    var listaCompras = ListaComprasInheritedWidget.of(context).listaCompras;
+    var itemsHtml = '';
+    var displayItems = [];
+
+    listaCompras.forEachIndexed((index, compra) {
+      var item = compra["compra${index + 1}"];
+      itemsHtml += item["eventoNombre"];
+      var cantidad = int.parse(item['cantidad'] ?? '1');
+      var precioTotal = cantidad * int.parse(item["precio"]);
+      var nombrEvento = item["eventoNombre"];
+      total += precioTotal;
+      var precio = int.parse(item["precio"]);
+      precioUnitario = precio;
+
+      displayItems.add({
+        'label': itemsHtml,
+        'type': 'SUBTOTAL',
+        'price': "$precioTotal",
+      });
+    });
+
+    setState(() {
+      this.total = total;
+    });
+
+    return WebViewX(
+      width: MediaQuery.of(context).size.width,
+      height: 100,
+      initialContent: '''
+      <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Basic Example</title>
+
+  </head>
+  <body style="margin:0; padding: 0;">
+  <div id="container" style="width: 407px; height: 45px;"></div>
+ 
+    <script async
+      src="https://pay.google.com/gp/p/js/pay.js"
+      onload="onGooglePayLoaded()"></script>
+    <script>
+      /**
+ * Define the version of the Google Pay API referenced when creating your
+ * configuration
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#PaymentDataRequest|apiVersion in PaymentDataRequest}
+ */
+const baseRequest = {
+  apiVersion: 2,
+  apiVersionMinor: 0
+};
+
+/**
+ * Card networks supported by your site and your gateway
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#CardParameters|CardParameters}
+ * @todo confirm card networks supported by your site and gateway
+ */
+const allowedCardNetworks = ["AMEX", "DISCOVER", "INTERAC", "JCB", "MASTERCARD", "VISA"];
+
+/**
+ * Card authentication methods supported by your site and your gateway
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#CardParameters|CardParameters}
+ * @todo confirm your processor supports Android device tokens for your
+ * supported card networks
+ */
+const allowedCardAuthMethods = ["PAN_ONLY", "CRYPTOGRAM_3DS"];
+
+/**
+ * Identify your gateway and your site's gateway merchant identifier
+ *
+ * The Google Pay API response will return an encrypted payment method capable
+ * of being charged by a supported gateway after payer authorization
+ *
+ * @todo check with your gateway on the parameters to pass
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#gateway|PaymentMethodTokenizationSpecification}
+ */
+const tokenizationSpecification = {
+  type: 'PAYMENT_GATEWAY',
+  parameters: {
+    'gateway': 'example',
+    'gatewayMerchantId': 'exampleGatewayMerchantId'
+  }
+};
+
+/**
+ * Describe your site's support for the CARD payment method and its required
+ * fields
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#CardParameters|CardParameters}
+ */
+const baseCardPaymentMethod = {
+  type: 'CARD',
+  parameters: {
+    allowedAuthMethods: allowedCardAuthMethods,
+    allowedCardNetworks: allowedCardNetworks
+  }
+};
+
+/**
+ * Describe your site's support for the CARD payment method including optional
+ * fields
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#CardParameters|CardParameters}
+ */
+const cardPaymentMethod = Object.assign(
+  {},
+  baseCardPaymentMethod,
+  {
+    tokenizationSpecification: tokenizationSpecification
+  }
+);
+
+/**
+ * An initialized google.payments.api.PaymentsClient object or null if not yet set
+ *
+ * @see {@link getGooglePaymentsClient}
+ */
+let paymentsClient = null;
+
+/**
+ * Configure your site's support for payment methods supported by the Google Pay
+ * API.
+ *
+ * Each member of allowedPaymentMethods should contain only the required fields,
+ * allowing reuse of this base request when determining a viewer's ability
+ * to pay and later requesting a supported payment method
+ *
+ * @returns {object} Google Pay API version, payment methods supported by the site
+ */
+function getGoogleIsReadyToPayRequest() {
+  return Object.assign(
+      {},
+      baseRequest,
+      {
+        allowedPaymentMethods: [baseCardPaymentMethod]
+      }
+  );
+}
+
+/**
+ * Configure support for the Google Pay API
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#PaymentDataRequest|PaymentDataRequest}
+ * @returns {object} PaymentDataRequest fields
+ */
+function getGooglePaymentDataRequest() {
+  const paymentDataRequest = Object.assign({}, baseRequest);
+  paymentDataRequest.allowedPaymentMethods = [cardPaymentMethod];
+  paymentDataRequest.transactionInfo = getGoogleTransactionInfo();
+  paymentDataRequest.merchantInfo = {
+    // @todo a merchant ID is available for a production environment after approval by Google
+    // See {@link https://developers.google.com/pay/api/web/guides/test-and-deploy/integration-checklist|Integration checklist}
+    // merchantId: '01234567890123456789',
+    merchantName: 'Entradas'
+  };
+
+  paymentDataRequest.callbackIntents = ["PAYMENT_AUTHORIZATION"];
+
+  return paymentDataRequest;
+}
+
+/**
+ * Return an active PaymentsClient or initialize
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/client#PaymentsClient|PaymentsClient constructor}
+ * @returns {google.payments.api.PaymentsClient} Google Pay API client
+ */
+function getGooglePaymentsClient() {
+  if ( paymentsClient === null ) {
+    paymentsClient = new google.payments.api.PaymentsClient({
+        environment: 'TEST',
+      paymentDataCallbacks: {
+        onPaymentAuthorized: onPaymentAuthorized
+      }
+    });
+  }
+  return paymentsClient;
+}
+
+/**
+ * Handles authorize payments callback intents.
+ *
+ * @param {object} paymentData response from Google Pay API after a payer approves payment through user gesture.
+ * @see {@link https://developers.google.com/pay/api/web/reference/response-objects#PaymentData object reference}
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/response-objects#PaymentAuthorizationResult}
+ * @returns Promise<{object}> Promise of PaymentAuthorizationResult object to acknowledge the payment authorization status.
+ */
+        function operacionExitosa() {
+  return true;
+}
+function onPaymentAuthorized(paymentData) {
+  return new Promise(function(resolve, reject){
+    // handle the response
+    processPayment(paymentData)
+      .then(function() {
+        
+        resolve({transactionState: 'SUCCESS'});
+       window.parent.postMessage('MENSAJE EXITOSO', "*");
+      })
+      .catch(function() {
+        resolve({
+          transactionState: 'ERROR',
+          error: {
+            intent: 'PAYMENT_AUTHORIZATION',
+            message: 'Insufficient funds, try again. Next attempt should work.',
+            reason: 'PAYMENT_DATA_INVALID'
+          }
+        });
+	    });
+  });
+}
+
+/**
+ * Initialize Google PaymentsClient after Google-hosted JavaScript has loaded
+ *
+ * Display a Google Pay payment button after confirmation of the viewer's
+ * ability to pay.
+ */
+
+function onGooglePayLoaded() {
+  const paymentsClient = getGooglePaymentsClient();
+  paymentsClient.isReadyToPay(getGoogleIsReadyToPayRequest())
+    .then(function(response) {
+      if (response.result) {
+        addGooglePayButton();
+
+      }
+    })
+    .catch(function(err) {
+      // show error in developer console for debugging
+      console.error(err);
+    });
+}
+
+/**
+ * Add a Google Pay purchase button alongside an existing checkout button
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#ButtonOptions|Button options}
+ * @see {@link https://developers.google.com/pay/api/web/guides/brand-guidelines|Google Pay brand guidelines}
+ */
+function addGooglePayButton() {
+  const paymentsClient = getGooglePaymentsClient();
+  const container = document.getElementById('container');
+  const button =
+      paymentsClient.createButton({onClick: onGooglePaymentButtonClicked,buttonColor: 'black',
+  buttonType: 'buy',
+  buttonLocale: 'es',
+  buttonSizeMode: 'fill',});
+  document.getElementById('container').appendChild(button);
+}
+
+/**
+ * Provide Google Pay API with a payment amount, currency, and amount status
+ *
+ * @see {@link https://developers.google.com/pay/api/web/reference/request-objects#TransactionInfo|TransactionInfo}
+ * @returns {object} transaction info, suitable for use as transactionInfo property of PaymentDataRequest
+ */
+function getGoogleTransactionInfo() {
+  return {
+        displayItems: ${json.encode(displayItems)},
+    countryCode: 'CL',
+    currencyCode: "CLP",
+    totalPriceStatus: "FINAL",
+    totalPrice: "$_total",
+    totalPriceLabel: "Total"
+  };
+}
+
+
+/**
+ * Show Google Pay payment sheet when Google Pay payment button is clicked
+ */
+function onGooglePaymentButtonClicked() {
+  const paymentDataRequest = getGooglePaymentDataRequest();
+  paymentDataRequest.transactionInfo = getGoogleTransactionInfo();
+
+  const paymentsClient = getGooglePaymentsClient();
+  paymentsClient.loadPaymentData(paymentDataRequest);
+}
+
+let attempts = 0;
+/**
+ * Process payment data returned by the Google Pay API
+ *
+ * @param {object} paymentData response from Google Pay API after user approves payment
+ * @see {@link https://developers.google.com/pay/api/web/reference/response-objects#PaymentData|PaymentData object reference}
+ */
+function processPayment(paymentData) {
+  return new Promise(function(resolve, reject) {
+    setTimeout(function() {
+      // @todo pass payment token to your gateway to process payment
+      paymentToken = paymentData.paymentMethodData.tokenizationData.token;
+
+			if (attempts++ % 2 == 0) {
+	      reject(new Error('Every other attempt fails, next one should succeed'));      
+      } else {
+	      resolve({
+          
+        });      
+      }
+    }, 500);
+  });
+}
+    </script>
+
+  </body>
+</html>
+    ''',
+      initialSourceType: SourceType.html,
+      onWebViewCreated: (WebViewXController webviewController) async {
+        String success = await webviewController.evalRawJavascript(
+            "onPaymentAuthorized(paymentData)",
+            inGlobalContext: true);
+        if (success == 'SUCCESS') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Operación exitosa'),
+            ),
+          );
+        }
+      },
+      javascriptMode: JavascriptMode.unrestricted,
+    );
   }
 
   /* ---------------------VISTA CARRITO--------------------------------- */
@@ -963,7 +1333,7 @@ class _ShoppingUIState extends State<ShoppingUI> {
       }
       compra = listaCompras[index]['compra${index + 1}'];
       var cantidad = int.parse(compra['cantidad'] ?? '1');
-      var precioTotal = cantidad * precioUnitario;
+      var precioTotal = cantidad * int.parse(compra["precio"]);
       _total += precioTotal; // agregar el precio total al total
     });
     return Container(
@@ -985,8 +1355,7 @@ class _ShoppingUIState extends State<ShoppingUI> {
                     ? MediaQuery.of(context).size.height * 0.72
                     : MediaQuery.of(context).size.height * 0.85,
                 margin: EdgeInsets.only(bottom: 10),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
+                child: Expanded(
                   child: Column(
                     children: [
                       Text(
@@ -1015,7 +1384,8 @@ class _ShoppingUIState extends State<ShoppingUI> {
                                   final cantidad =
                                       int.parse(compra['cantidad'] ?? '1');
 
-                                  var precioTotal = cantidad * precioUnitario;
+                                  var precioTotal =
+                                      cantidad * int.parse(compra['precio']);
                                   /* 1 *100 = 100
                                     2* 100 = 200
                                     total = total + precio total
@@ -1025,118 +1395,148 @@ class _ShoppingUIState extends State<ShoppingUI> {
                                       
                                    */
 
-                                  return Column(
-                                    children: [
-                                      SizedBox(
-                                        height: 5,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              compra!['eventoNombre'] ?? '',
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: 120,
-                                            child: Text(
-                                                DateFormat('dd/MM/yyyy').format(
-                                                  compra['fecha']?.toLocal() ??
-                                                      DateTime.now(),
-                                                ),
+                                  return Expanded(
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          height: 5,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                compra!['eventoNombre'] ?? '',
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
                                                     fontWeight:
-                                                        FontWeight.bold)),
-                                          ),
-                                          Expanded(
-                                            child: SizedBox(
-                                              width: 100,
-                                              child: Wrap(
-                                                spacing: 10,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      IconButton(
-                                                        icon:
-                                                            Icon(Icons.remove),
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            if (cantidad > 1) {
+                                                        FontWeight.bold),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              width: 120,
+                                              child: Text(
+                                                  DateFormat('dd/MM/yyyy')
+                                                      .format(
+                                                    compra['fecha']
+                                                            ?.toLocal() ??
+                                                        DateTime.now(),
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                            ),
+                                            Expanded(
+                                              child: SizedBox(
+                                                width: 100,
+                                                child: Wrap(
+                                                  spacing: 10,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        IconButton(
+                                                          icon: Icon(
+                                                              Icons.remove),
+                                                          onPressed: () {
+                                                            setState(() {
+                                                              if (cantidad >
+                                                                  1) {
+                                                                listaCompras[
+                                                                            index]
+                                                                        [
+                                                                        'compra${index + 1}']![
+                                                                    'cantidad'] = (cantidad -
+                                                                        1)
+                                                                    .toString();
+                                                                _total -= int
+                                                                    .parse(compra[
+                                                                        'precio']);
+                                                                print(
+                                                                    listaCompras);
+                                                              } else {
+                                                                listaCompras[
+                                                                            index]
+                                                                        [
+                                                                        'compra${index + 1}']![
+                                                                    'cantidad'] = '1';
+                                                              }
+                                                            });
+                                                          },
+                                                        ),
+                                                        Text(
+                                                          '$cantidad',
+                                                          style: TextStyle(
+                                                              fontSize: 18,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        IconButton(
+                                                          icon: Icon(Icons.add),
+                                                          onPressed: () {
+                                                            setState(() {
                                                               listaCompras[index]
                                                                           [
                                                                           'compra${index + 1}']![
                                                                       'cantidad'] =
-                                                                  (cantidad - 1)
+                                                                  (cantidad + 1)
                                                                       .toString();
-                                                              _total -=
-                                                                  precioUnitario;
+                                                              _total += int
+                                                                  .parse(compra[
+                                                                      'precio']);
                                                               print(
                                                                   listaCompras);
-                                                            } else {
-                                                              listaCompras[
-                                                                          index]
-                                                                      [
-                                                                      'compra${index + 1}']![
-                                                                  'cantidad'] = '1';
-                                                            }
-                                                          });
-                                                        },
-                                                      ),
-                                                      Text(
-                                                        '$cantidad',
-                                                        style: TextStyle(
-                                                            fontSize: 18,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold),
-                                                      ),
-                                                      IconButton(
-                                                        icon: Icon(Icons.add),
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            listaCompras[index][
-                                                                        'compra${index + 1}']![
-                                                                    'cantidad'] =
-                                                                (cantidad + 1)
-                                                                    .toString();
-                                                            _total +=
-                                                                precioUnitario;
-                                                            print(listaCompras);
-                                                          });
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
+                                                            });
+                                                          },
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          Expanded(
-                                            child: Text(
-                                                '\$${precioTotal.toString()}',
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.delete),
-                                            onPressed: () {
-                                              setState(() {
-                                                listaCompras.removeAt(index);
-                                              });
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                      Divider(),
-                                    ],
+                                            Expanded(
+                                              child: Text(
+                                                  '\$${precioTotal.toString()}',
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(Icons.delete),
+                                              onPressed: () {
+                                                setState(() {
+                                                  if (index ==
+                                                      listaCompras.length - 1) {
+                                                    listaCompras
+                                                        .removeAt(index);
+                                                  } else {
+                                                    // Actualiza los nombres de las compras
+                                                    for (int i = index + 1;
+                                                        i < listaCompras.length;
+                                                        i++) {
+                                                      listaCompras[i]
+                                                              ['compra${i}'] =
+                                                          listaCompras[i].remove(
+                                                              'compra${i + 1}');
+                                                    }
+                                                    listaCompras
+                                                        .removeAt(index);
+                                                  }
+                                                  print(listaCompras);
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        Divider(),
+                                      ],
+                                    ),
                                   );
                                 })
                             : Center(
@@ -1182,19 +1582,8 @@ class _ShoppingUIState extends State<ShoppingUI> {
                       ),
                     ),
                     SizedBox(
-                      width: MediaQuery.of(context).size.height / 2,
-                      child: ElevatedButton(
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(colorNaranja),
-                        ),
-                        onPressed: () {
-                          // Lógica para ir a pagar
-                          print(_total);
-                        },
-                        child: Text('Ir a pagar'),
-                      ),
-                    ),
+                        width: MediaQuery.of(context).size.height / 2,
+                        child: gpayTest()),
                     SizedBox(
                       width: MediaQuery.of(context).size.height / 2,
                       child: ElevatedButton(
@@ -1277,7 +1666,7 @@ class _ShoppingUIState extends State<ShoppingUI> {
                           ),
                         )),
                         Align(
-                          alignment: Alignment.centerRight,
+                          alignment: Alignment.centerLeft,
                           child: AnimatedContainer(
                             duration: Duration(milliseconds: 500),
                             curve: Curves.easeInOutBack,
@@ -1294,14 +1683,7 @@ class _ShoppingUIState extends State<ShoppingUI> {
                                     70, // Ajustar a la altura inicial del contenedor
                                 child: mostrarGridImagenes
                                     ? GestureDetector(
-                                        onTap: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return vistaCarrito(listaCompras);
-                                            },
-                                          );
-                                        },
+                                        onTap: () {},
                                         child: mostrarControl2
                                             ? Center(
                                                 child: Column(
@@ -1497,8 +1879,9 @@ class _ShoppingUIState extends State<ShoppingUI> {
                                                                 .all(10.0),
                                                         child: Icon(
                                                           Icons
-                                                              .shopping_cart_sharp,
-                                                          color: Colors.white,
+                                                              .shopping_cart_checkout_rounded,
+                                                          color: colorNaranja,
+                                                          size: 60,
                                                         ),
                                                       ),
                                                       if (cantidadCompras > 0)
@@ -1624,14 +2007,7 @@ class _ShoppingUIState extends State<ShoppingUI> {
         child: Column(
           children: [
             GestureDetector(
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return vistaCarrito(listaCompras);
-                  },
-                );
-              },
+              onTap: () {},
               child: Row(
                 children: [
                   Container(
@@ -1645,7 +2021,7 @@ class _ShoppingUIState extends State<ShoppingUI> {
                       child: Row(
                         children: [
                           Text(
-                            'Entradas',
+                            'Carrito',
                             style: TextStyle(
                                 color: colorNaranja,
                                 fontWeight: FontWeight.bold,

@@ -4,7 +4,10 @@ import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:embed_webview/embed_webview.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+
+import 'package:mercadopago_sdk/mercadopago_sdk.dart';
 import 'package:prueba/autenticacion.dart';
 import 'package:prueba/login/login.dart';
 import 'package:prueba/sliderImagenesHeader/dataFrame.dart';
@@ -18,16 +21,21 @@ import 'package:prueba/ventanas/eventosUI/allEvents.dart';
 import 'package:prueba/ventanas/eventosUI/myEventsUI.dart';
 import 'package:prueba/ventanas/eventosUI/eventsSavedUI.dart';
 import 'package:prueba/ventanas/shoppingUI/shoppingCartUI.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:prueba/ventanas/visionUI.dart';
 
 import 'package:prueba/ventanas/coffeeUI/myCoffeeUI.dart';
+import 'package:webviewx_plus/webviewx_plus.dart';
 
 class Header extends StatefulWidget {
   final double ancho_pantalla;
   final bool usuarioLogueado;
 
-  Header(this.ancho_pantalla, this.usuarioLogueado);
+  static final GlobalKey<_HeaderState> headerKey = GlobalKey<_HeaderState>();
+
+  Header(this.ancho_pantalla, this.usuarioLogueado, {Key? key})
+      : super(key: key);
 
   @override
   _HeaderState createState() => _HeaderState();
@@ -36,6 +44,25 @@ class Header extends StatefulWidget {
 class _HeaderState extends State<Header> {
   void initState() {
     super.initState();
+  }
+
+  abrirCarritoUI(String menu) {
+    print(menu);
+    if (menu == 'Carrito') {
+      setState(() {
+        openShoppingCart = true;
+      });
+      cerrarModuloResenas("Reseñas");
+      cerrarModuloCafeteria('Cafeterias');
+      cerrarModuloCarrito(menu);
+      cerrarModuloEventos("Eventos");
+      Future.delayed(Duration(milliseconds: 600), () {
+        setState(() {
+          feedbackUI = menu;
+          openShoppingCart = true;
+        });
+      });
+    }
   }
 
   var openLogin = false;
@@ -111,11 +138,54 @@ class _HeaderState extends State<Header> {
   var mostrarMenuCuenta2 = false;
 
   var mostrarVisionAI = false;
+  late WebViewXController webviewController;
 
   List<dynamic> activarSubMenuBtnSSB = ['', false, false];
 
   var hoverSideBar = false;
   var hoverSubSideBar = false;
+
+  String pruebaHtml = '''
+            <html lang="es">
+                          <head>
+                            <link rel="stylesheet" href="main.css">
+                            <meta charset="utf-8">
+                            <title></title>
+                          </head>
+                          <body>
+                            <script src="https://www.gstatic.com/dialogflow-console/fast/messenger-cx/bootstrap.js?v=1"></script>
+                          <df-messenger df-cx="true" location="us-central1" chat-title="Agente Virtual de CoffeeMondo ☕" agent-id="aeee7fab-0176-4d4f-8bd5-c1f2c7298ea0" language-code="es" chat-icon="assets/logo.png">
+                          </df-messenger>
+                            <script>
+                          window.addEventListener('dfMessengerLoaded', function (event) {
+            const dfMessenger = document.querySelector('df-messenger');
+            const openText = ('¡Hola, bienvenid@! ¿Deseas interactuar con nuestro agente virtual: Mondo Bot?');
+                          dfMessenger.renderCustomText(openText);
+                          });
+                          
+                            </script>
+                            
+                            <script>
+            const dfMessenger = document.querySelector('df-messenger');
+            dfMessenger.addEventListener('event-type', function (event) {
+                          
+            });
+                            </script>
+                            <h1></h1>
+                          </body>
+                          <style>
+                            df-messenger {
+                             --df-messenger-bot-message: #FF4F34ff;
+                             --df-messenger-button-titlebar-color: #FF4F34ff;
+                             --df-messenger-chat-background-color: #603D8Dff;
+                             --df-messenger-font-color: white;
+                             --df-messenger-send-icon: #FF4F34ff;
+                             --df-messenger-user-message: #D7432Cff;
+                            }
+                          </style>
+                        </html>
+                        
+                            ''';
 
   String dispositivo = '';
   Widget logoMenu() {
@@ -354,6 +424,15 @@ class _HeaderState extends State<Header> {
     });
   }
 
+  void cerrarModuloCarrito(String modulo) {
+    setState(() {
+      if (modulo == 'Carrito') {
+        openShoppingCart = false;
+        openShoppingCart2 = false;
+      }
+    });
+  }
+
   void cerrarSubMenu(String menu) {
     setState(() {
       if (menu == 'Cafeterias') {
@@ -398,7 +477,7 @@ class _HeaderState extends State<Header> {
     });
   }
 
-/*   void cerrarSideBar() {
+  void cerrarSideBar() {
     setState(() {
       sideBar3 = !sideBar3;
     });
@@ -412,7 +491,7 @@ class _HeaderState extends State<Header> {
         sideBar = !sideBar;
       });
     });
-  } */
+  }
 
   void cerrarModuloCafeteria(String modulo) {
     setState(() {
@@ -440,13 +519,44 @@ class _HeaderState extends State<Header> {
     });
   }
 
-  void cerrarModuloCarrito(String modulo) {
-    setState(() {
-      if (modulo == 'Carrito') {
-        openShoppingCart = false;
-        openShoppingCart2 = false;
-      }
-    });
+  void abrirEventosUI(String menu) {
+    print(menu);
+    if (menu == 'Todos las eventos') {
+      setState(() {
+        openAllEvents = true;
+        openMyEvents2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openMyEvents = false;
+          openAllEvents2 = true;
+        });
+      });
+    } else if (menu == 'Mis eventos') {
+      setState(() {
+        openMyEvents = true;
+        openAllEvents2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openAllEvents = false;
+          openMyEvents2 = true;
+        });
+      });
+    } else if (menu == 'Eventos guardados') {
+      setState(() {
+        openSavedEvents = true;
+        openAllEvents2 = false;
+        openMyEvents2 = false;
+      });
+      Future.delayed(Duration(milliseconds: 300), () {
+        setState(() {
+          openAllEvents = false;
+          openMyEvents = false;
+          openSavedEvents2 = true;
+        });
+      });
+    }
   }
 
   void mostrarVision() {
@@ -455,6 +565,7 @@ class _HeaderState extends State<Header> {
       openLogin2 = false;
       openLogin = false;
       cerrarModuloCafeteria('Cafeterias');
+      cerrarModuloResenas('Crear reseña');
     });
     Future.delayed(Duration(milliseconds: 500), () {
       openVision2 = true;
@@ -472,6 +583,7 @@ class _HeaderState extends State<Header> {
 
   void mostrarData() {
     cerrarModuloCafeteria('Cafeterias');
+    cerrarModuloResenas('Crear reseña');
     setState(() {
       openData = true;
     });
@@ -532,7 +644,9 @@ class _HeaderState extends State<Header> {
         child: InkWell(
           onHover: (value) => {
             print(value),
-            dispositivo == 'PC' ? disparadorBtnSideBar(menu, value) : null
+            dispositivo == 'PC' && menu != "Carrito"
+                ? disparadorBtnSideBar(menu, value)
+                : null,
           },
           onTap: () {
             if (menu == 'Cafeterias') {
@@ -560,7 +674,19 @@ class _HeaderState extends State<Header> {
                       : abrirSubMenu(menu)
                   : cerrarSubMenu(menu);
             } else if (menu == 'Carrito') {
-              dispositivo != 'PC' ? openShoppingCart : abrirCarritoUI(menu);
+              setState(() {
+                openAllfeedback = false;
+              });
+              disparadorBtnSideBar(menu, true);
+              cerrarModuloResenas("Reseñas");
+              cerrarModuloCafeteria('Cafeterias');
+
+              cerrarModuloEventos("Eventos");
+              dispositivo != 'PC'
+                  ? openShoppingCart
+                      ? cerrarSubMenu(menu)
+                      : abrirCarritoUI(menu)
+                  : cerrarSubMenu(menu);
             } else if (menu == 'Mi cuenta') {
               dispositivo != 'PC'
                   ? mostrarMenuCuenta
@@ -615,9 +741,11 @@ class _HeaderState extends State<Header> {
                               : abrirSubMenu(menu)
                           : cerrarSubMenu(menu);
                     } else if (menu == 'Carrito') {
+                      disparadorBtnSideBar(menu, true);
                       dispositivo != 'PC'
-                          ? openShoppingCart
-                          : abrirCarritoUI(menu);
+                          ? abrirCarritoUI(menu)
+                          : openShoppingCart;
+                      abrirCarritoUI(menu);
                     } else if ((menu == 'Cerrar sesion')) {
                       cerrarSesion();
                     } else if (menu == 'Iniciar sesion') {
@@ -654,10 +782,6 @@ class _HeaderState extends State<Header> {
               height: 30,
             ),
             btnSideBar('Eventos', Icons.event),
-            SizedBox(
-              height: 30,
-            ),
-            btnSideBar('Carrito', Icons.shopping_cart),
             usuarioLogeado
                 ? SizedBox(
                     height: 30,
@@ -717,7 +841,7 @@ class _HeaderState extends State<Header> {
                   if (sideBar2) {
                     cerrarSubMenu('Todos');
                     Future.delayed(Duration(milliseconds: 350), () {
-                      /*  cerrarSideBar(); */
+                      cerrarSideBar();
                     });
                   } else {
                     abrirSideBar();
@@ -748,6 +872,7 @@ class _HeaderState extends State<Header> {
       } else if (menu == 'Vision AI') {
         print('Vision AI');
         mostrarVision();
+
         cerrarData();
       } else if (menu == 'Crear cafeteria') {}
     }
@@ -793,55 +918,6 @@ class _HeaderState extends State<Header> {
     }
   }
 
-  void abrirEventosUI(String menu) {
-    print(menu);
-    if (menu == 'Todos los eventos') {
-      setState(() {
-        openAllEvents = true;
-        openMyEvents2 = false;
-      });
-      Future.delayed(Duration(milliseconds: 300), () {
-        setState(() {
-          openMyEvents = false;
-          openAllEvents2 = true;
-        });
-      });
-    } else if (menu == 'Mis eventos') {
-      setState(() {
-        openMyEvents = true;
-        openAllEvents2 = false;
-      });
-      Future.delayed(Duration(milliseconds: 300), () {
-        setState(() {
-          openAllEvents = false;
-          openMyEvents2 = true;
-        });
-      });
-    } else if (menu == 'Eventos guardados') {
-      setState(() {
-        openSavedEvents = true;
-        openAllEvents2 = false;
-        openMyEvents2 = false;
-      });
-      Future.delayed(Duration(milliseconds: 300), () {
-        setState(() {
-          openAllEvents = false;
-          openMyEvents = false;
-          openSavedEvents2 = true;
-        });
-      });
-    }
-  }
-
-  void abrirCarritoUI(String menu) {
-    print(menu);
-    if (menu == 'Carrito') {
-      setState(() {
-        openShoppingCart = true;
-      });
-    }
-  }
-
   void cerrarModuloResenas(String menu) {
     if (menu == 'Todas las reseñas') {
       setState(() {
@@ -864,6 +940,15 @@ class _HeaderState extends State<Header> {
         openMyFeedback = false;
         openMyFeedback2 = false;
       });
+    } else if (menu == 'Crear reseña') {
+      setState(() {
+        openAllfeedback = false;
+        openAllfeedback2 = false;
+        openMyFeedback = false;
+        openMyFeedback2 = false;
+        openSavedFeedback = false;
+        openSavedFeedback2 = false;
+      });
     }
   }
 
@@ -881,6 +966,8 @@ class _HeaderState extends State<Header> {
       }
       cerrarModuloResenas(menu);
       cerrarModuloCafeteria('Cafeterias');
+      cerrarModuloCarrito("Carrito");
+      cerrarModuloEventos("Eventos");
       Future.delayed(Duration(milliseconds: 600), () {
         setState(() {
           feedbackUI = menu;
@@ -905,6 +992,8 @@ class _HeaderState extends State<Header> {
       }
       cerrarModuloResenas(menu);
       cerrarModuloCafeteria('Cafeterias');
+      cerrarModuloCarrito("Carrito");
+      cerrarModuloEventos("Eventos");
       Future.delayed(Duration(milliseconds: 600), () {
         setState(() {
           feedbackUI = menu;
@@ -929,6 +1018,8 @@ class _HeaderState extends State<Header> {
       }
       cerrarModuloResenas(menu);
       cerrarModuloCafeteria('Cafeterias');
+      cerrarModuloCarrito("Carrito");
+      cerrarModuloEventos("Eventos");
       Future.delayed(Duration(milliseconds: 600), () {
         setState(() {
           feedbackUI = menu;
@@ -1090,7 +1181,7 @@ class _HeaderState extends State<Header> {
                       btnSubSubSideBar(
                           '${ucFirst(btnText.split(' ')[1])} ${btnText.split(' ')[1] == 'eventos' ? 'guardados' : 'guardadas'}'),
                       btnSubSubSideBar(
-                          '${btnText.split(' ')[1] == 'eventos' ? 'Todos' : 'Todas'} ${btnText.split(' ')[1].toLowerCase() == 'eventos' ? 'los' : 'las'} ${btnText.split(' ')[1].toLowerCase()}'),
+                          '${btnText.split(' ')[1] == 'eventos' ? 'Todos' : 'Todas'} las ${btnText.split(' ')[1].toLowerCase()}'),
                     ],
                   ),
                 )
@@ -1316,128 +1407,94 @@ class _HeaderState extends State<Header> {
                                         duration: Duration(milliseconds: 500),
                                         child: Login(),
                                       )
-                                    : openVision
+                                    : openAllEvents
                                         ? AnimatedOpacity(
-                                            opacity: openVision2 ? 1 : 0,
+                                            opacity: openAllEvents2 ? 1 : 0,
                                             duration:
                                                 Duration(milliseconds: 500),
-                                            child: VisionUI(),
+                                            child: EventosUI(
+                                              tipoUI: eventsUI,
+                                            ),
                                           )
-                                        : openData
+                                        : openSavedEvents
                                             ? AnimatedOpacity(
-                                                opacity: openData2 ? 1 : 0,
+                                                opacity:
+                                                    openSavedEvents2 ? 1 : 0,
                                                 duration:
                                                     Duration(milliseconds: 500),
-                                                child: DataUI(),
+                                                child: eventsSavedUI(
+                                                  tipoUI: eventsUI,
+                                                ),
                                               )
-                                            : openMyEvents
+                                            : openVision
                                                 ? AnimatedOpacity(
                                                     opacity:
-                                                        openMyEvents2 ? 1 : 0,
+                                                        openVision2 ? 1 : 0,
                                                     duration: Duration(
                                                         milliseconds: 500),
-                                                    child: myEventsUI(
-                                                      tipoUI: eventsUI,
-                                                    ),
+                                                    child: VisionUI(),
                                                   )
-                                                : openAllEvents
+                                                : openShoppingCart
                                                     ? AnimatedOpacity(
-                                                        opacity: openAllEvents2
-                                                            ? 1
-                                                            : 0,
+                                                        opacity:
+                                                            openShoppingCart2
+                                                                ? 1
+                                                                : 0,
                                                         duration: Duration(
                                                             milliseconds: 500),
-                                                        child: EventosUI(
-                                                          tipoUI: eventsUI,
+                                                        child: ShoppingUI(
+                                                          tipoUI: shoppingUI,
                                                         ),
                                                       )
-                                                    : openSavedEvents
+                                                    : openData
                                                         ? AnimatedOpacity(
-                                                            opacity:
-                                                                openSavedEvents2
-                                                                    ? 1
-                                                                    : 0,
+                                                            opacity: openData2
+                                                                ? 1
+                                                                : 0,
                                                             duration: Duration(
                                                                 milliseconds:
                                                                     500),
-                                                            child:
-                                                                eventsSavedUI(
-                                                              tipoUI: eventsUI,
-                                                            ),
+                                                            child: DataUI(),
                                                           )
-                                                        : openShoppingCart
-                                                            ? AnimatedOpacity(
-                                                                opacity:
-                                                                    openShoppingCart2
-                                                                        ? 1
-                                                                        : 0,
-                                                                duration: Duration(
-                                                                    milliseconds:
-                                                                        500),
-                                                                child:
-                                                                    ShoppingUI(
-                                                                  tipoUI:
-                                                                      shoppingUI,
-                                                                ),
-                                                              )
-                                                            : Row(
-                                                                children: [
-                                                                  containerSideBar(),
-                                                                  InkWell(
-                                                                    mouseCursor:
-                                                                        MouseCursor
-                                                                            .defer,
-                                                                    onTap:
-                                                                        () {},
-                                                                    child:
-                                                                        containerSubSideBar(),
-                                                                    onHover:
-                                                                        (value) {
-                                                                      print(
-                                                                          value);
-                                                                      setState(
-                                                                          () {
-                                                                        hoverSubSideBar =
-                                                                            value;
-                                                                      });
-                                                                      if (!hoverSubSideBar &&
-                                                                          dispositivo ==
-                                                                              'PC') {
-                                                                        setState(
-                                                                            () {
-                                                                          mostrarMenuCafeteria2 =
-                                                                              false;
-                                                                          mostrarMenuResena2 =
-                                                                              false;
-                                                                          mostrarMenuServicio2 =
-                                                                              false;
-                                                                          mostrarMenuEvento2 =
-                                                                              false;
-                                                                          mostrarMenuCuenta2 =
-                                                                              false;
-                                                                        });
-                                                                        Future.delayed(
-                                                                            Duration(milliseconds: 300),
-                                                                            () {
-                                                                          setState(
-                                                                              () {
-                                                                            mostrarMenuCafeteria =
-                                                                                false;
-                                                                            mostrarMenuResena =
-                                                                                false;
-                                                                            mostrarMenuServicio =
-                                                                                false;
-                                                                            mostrarMenuEvento =
-                                                                                false;
-                                                                            mostrarMenuCuenta =
-                                                                                false;
-                                                                          });
-                                                                        });
-                                                                      }
-                                                                    },
-                                                                  )
-                                                                ],
-                                                              ),
+                                                        : Container(),
+        Row(
+          children: [
+            containerSideBar(),
+            InkWell(
+              mouseCursor: MouseCursor.defer,
+              onTap: () {},
+              child: containerSubSideBar(),
+              onHover: (value) {
+                print(value);
+                setState(() {
+                  hoverSubSideBar = value;
+                });
+                if (!hoverSubSideBar && dispositivo == 'PC') {
+                  setState(() {
+                    mostrarMenuCafeteria2 = false;
+                    mostrarMenuResena2 = false;
+                    mostrarMenuServicio2 = false;
+                    mostrarMenuEvento2 = false;
+                    mostrarMenuCuenta2 = false;
+                  });
+                  Future.delayed(Duration(milliseconds: 300), () {
+                    setState(() {
+                      mostrarMenuCafeteria = false;
+                      mostrarMenuResena = false;
+                      mostrarMenuServicio = false;
+                      mostrarMenuEvento = false;
+                      mostrarMenuCuenta = false;
+                    });
+                  });
+                }
+              },
+            )
+          ],
+        ),
+        Expanded(
+            child: Align(
+                alignment: Alignment.bottomRight,
+                child: HtmlWidget(pruebaHtml))),
       ],
     ));
   }

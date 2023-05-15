@@ -10,7 +10,7 @@ import 'package:prueba/autenticacion.dart';
 
 import '../../firebase_options.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
+
 import 'package:flutter_launcher_icons/abs/icon_generator.dart';
 import 'package:video_player/video_player.dart';
 import 'package:prueba/horizontalDraggable/horizontalDraggable.dart';
